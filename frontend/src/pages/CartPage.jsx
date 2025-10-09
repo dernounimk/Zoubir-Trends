@@ -3,12 +3,33 @@ import { useCartStore } from "../stores/useCartStore";
 import { motion } from "framer-motion";
 import { ShoppingCart } from "lucide-react";
 import CartItem from "../components/CartItem";
-import PeopleAlsoBought from "../components/PeopleAlsoBought";
 import OrderSummary from "../components/OrderSummary";
 import GiftCouponCard from "../components/GiftCouponCard";
+import { useTranslation } from "react-i18next";
+import axios from "../lib/axios";
+import { useEffect } from "react";
 
 const CartPage = () => {
-	const { cart } = useCartStore();
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === 'ar';
+  const { cart, removeFromCart, calculateTotals } = useCartStore();
+
+  useEffect(() => {
+    const validateCartProducts = async () => {
+      for (const item of cart) {
+        try {
+          await axios.get(`/products/${item._id}`);
+        } catch {
+          removeFromCart(item._id, item.selectedColor, item.selectedSize);
+        }
+      }
+      calculateTotals();
+    };
+
+    if (cart.length > 0) {
+      validateCartProducts();
+    }
+  }, [cart, removeFromCart, calculateTotals]);
 
 	return (
 		<div className='py-8 md:py-16'>
@@ -21,7 +42,7 @@ const CartPage = () => {
 						transition={{ duration: 0.5, delay: 0.2 }}
 					>
 						{cart.length === 0 ? (
-							<EmptyCartUI />
+							<EmptyCartUI t={t} />
 						) : (
 							<div className='space-y-6'>
 								{cart.map((item) => (
@@ -29,7 +50,6 @@ const CartPage = () => {
 								))}
 							</div>
 						)}
-						{cart.length > 0 && <PeopleAlsoBought />}
 					</motion.div>
 
 					{cart.length > 0 && (
@@ -48,23 +68,24 @@ const CartPage = () => {
 		</div>
 	);
 };
+
 export default CartPage;
 
-const EmptyCartUI = () => (
+const EmptyCartUI = ({ t }) => (
 	<motion.div
 		className='flex flex-col items-center justify-center space-y-4 py-16'
 		initial={{ opacity: 0, y: 20 }}
 		animate={{ opacity: 1, y: 0 }}
 		transition={{ duration: 0.5 }}
 	>
-		<ShoppingCart className='h-24 w-24 text-gray-300' />
-		<h3 className='text-2xl font-semibold '>Your cart is empty</h3>
-		<p className='text-gray-400'>Looks like you {"haven't"} added anything to your cart yet.</p>
+		<ShoppingCart className='h-24 w-24 text-[var(--color-text-secondary)]' />
+		<h3 className='text-2xl font-semibold text-[var(--color-text-secondary)]'>{t("cartPage.empty.title")}</h3>
+		<p className='text-[var(--color-text-secondary)] text-center'>{t("cartPage.empty.description")}</p>
 		<Link
-			className='mt-4 rounded-md bg-emerald-500 px-6 py-2 text-white transition-colors hover:bg-emerald-600'
+			className='mt-4 rounded-md bg-[var(--color-accent)] px-6 py-2 text-white transition-colors hover:bg-[var(--color-accent-hover)]'
 			to='/'
 		>
-			Start Shopping
+			{t("cartPage.empty.startShopping")}
 		</Link>
 	</motion.div>
 );

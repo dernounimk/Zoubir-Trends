@@ -7,30 +7,17 @@ const couponSchema = new mongoose.Schema(
 			required: true,
 			unique: true,
 		},
-		discountPercentage: {
+		discountAmount: {
 			type: Number,
 			required: true,
 			min: 0,
-			max: 100,
-		},
-		expirationDate: {
-			type: Date,
-			required: true,
 		},
 		isActive: {
 			type: Boolean,
 			default: true,
 		},
-		userId: {
-			type: mongoose.Schema.Types.ObjectId,
-			ref: "User",
-			required: true,
-			unique: true,
-		},
 	},
-	{
-		timestamps: true,
-	}
+	{ timestamps: true }
 );
 
 const Coupon = mongoose.model("Coupon", couponSchema);

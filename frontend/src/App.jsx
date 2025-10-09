@@ -1,42 +1,53 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
+import { useEffect } from "react";
+import "./i18n/i18n";
+import { useTranslation } from 'react-i18next';
 
 import HomePage from "./pages/HomePage";
-import SignUpPage from "./pages/SignUpPage";
-import LoginPage from "./pages/LoginPage";
 import AdminPage from "./pages/AdminPage";
 import CategoryPage from "./pages/CategoryPage";
-
 import Navbar from "./components/Navbar";
 import { Toaster } from "react-hot-toast";
-import { useUserStore } from "./stores/useUserStore";
-import { useEffect } from "react";
-import LoadingSpinner from "./components/LoadingSpinner";
-import CartPage from "./pages/CartPage";
+import { useAdminAuthStore } from "./stores/useAdminAuthStore";
 import { useCartStore } from "./stores/useCartStore";
+import CartPage from "./pages/CartPage";
 import PurchaseSuccessPage from "./pages/PurchaseSuccessPage";
-import PurchaseCancelPage from "./pages/PurchaseCancelPage";
+import ShippingInfoPage from "./pages/ShippingInfoPage";
+import AdminLogin from "./pages/AdminLogin";
+import ProductPage from "./pages/ProductPage";
+import Contact from "./pages/Contact";
+import Footer from "./components/Footer";
+import Faq from "./pages/Faq";
+import Confidentiality from "./pages/Confidentiality";
+import Terms from "./pages/Terms";
+import ScrollToTop from "./components/ScrollToTop";
+import NotFoundPage from "./pages/NotFoundPage";
+import TrackingForm from "./pages/TrackingForm";
+import FavoritesPage from "./pages/FavoritesPage";
+import ScrollToTopButton from "./components/ScrollToTopButton";
 
 function App() {
-	const { user, checkAuth, checkingAuth } = useUserStore();
-	const { getCartItems } = useCartStore();
+	const { i18n } = useTranslation();
+	const calculateTotals = useCartStore((state) => state.calculateTotals);
+	const checkAuth = useAdminAuthStore((state) => state.checkAuth);
+
 	useEffect(() => {
 		checkAuth();
-	}, [checkAuth]);
+	}, []);
 
 	useEffect(() => {
-		if (!user) return;
-
-		getCartItems();
-	}, [getCartItems, user]);
-
-	if (checkingAuth) return <LoadingSpinner />;
+		calculateTotals();
+	}, []);
 
 	return (
-		<div className='min-h-screen bg-gray-900 text-white relative overflow-hidden'>
-			{/* Background gradient */}
+		<div className='min-h-screen bg-gray-900 text-white relative overflow-hidden' dir={i18n.language === 'ar' ? 'rtl' : 'ltr'}>
+			<ScrollToTop/>
 			<div className='absolute inset-0 overflow-hidden'>
 				<div className='absolute inset-0'>
-					<div className='absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(ellipse_at_top,rgba(16,185,129,0.3)_0%,rgba(10,80,60,0.2)_45%,rgba(0,0,0,0.1)_100%)]' />
+					<div
+					className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full"
+					style={{ backgroundImage: "var(--bg-gradient)" }}
+					/>
 				</div>
 			</div>
 
@@ -44,22 +55,25 @@ function App() {
 				<Navbar />
 				<Routes>
 					<Route path='/' element={<HomePage />} />
-					<Route path='/signup' element={!user ? <SignUpPage /> : <Navigate to='/' />} />
-					<Route path='/login' element={!user ? <LoginPage /> : <Navigate to='/' />} />
-					<Route
-						path='/secret-dashboard'
-						element={user?.role === "admin" ? <AdminPage /> : <Navigate to='/login' />}
-					/>
+					<Route path='/contact' element={<Contact />} />
+					<Route path='/dash' element={<AdminPage />} />
 					<Route path='/category/:category' element={<CategoryPage />} />
-					<Route path='/cart' element={user ? <CartPage /> : <Navigate to='/login' />} />
-					<Route
-						path='/purchase-success'
-						element={user ? <PurchaseSuccessPage /> : <Navigate to='/login' />}
-					/>
-					<Route path='/purchase-cancel' element={user ? <PurchaseCancelPage /> : <Navigate to='/login' />} />
+					<Route path='/cart' element={<CartPage />} />
+					<Route path='/purchase-success' element={<PurchaseSuccessPage />} />
+					<Route path='/shipping-info' element={<ShippingInfoPage />} />
+					<Route path='/admin/login' element={<AdminLogin/>} />
+					<Route path="/product/:id" element={<ProductPage />} />
+					<Route path="/faq" element={<Faq/>} />
+					<Route path="/privacy-policy" element={<Confidentiality/>} />
+					<Route path="/terms-of-use" element={<Terms/>} />
+					<Route path="/order-tracking" element={<TrackingForm/>} />
+					<Route path="*" element={<NotFoundPage/>} />
+					<Route path="/favorites" element={<FavoritesPage/>} />
 				</Routes>
+				<Footer/>
+				<ScrollToTopButton />
 			</div>
-			<Toaster />
+			<Toaster containerStyle={{ zIndex: 11000 }} />
 		</div>
 	);
 }

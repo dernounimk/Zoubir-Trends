@@ -10,17 +10,23 @@
 		"preview": "vite preview"
 	},
 	"dependencies": {
-		"react": "^18.3.1",
-		"react-dom": "^18.3.1",
-		"lucide-react": "^0.435.0",
-		"react-confetti": "^6.1.0",
-		"react-hot-toast": "^2.4.1",
-		"react-router-dom": "^6.26.1",
-		"recharts": "^2.12.7",
-		"framer-motion": "^11.3.30",
-		"zustand": "^4.5.5",
 		"@stripe/stripe-js": "^4.3.0",
-		"axios": "^1.7.5"
+		"axios": "^1.7.5",
+		"dayjs": "^1.11.13",
+		"framer-motion": "^11.3.30",
+		"i18next": "^25.3.4",
+		"i18next-browser-languagedetector": "^8.2.0",
+		"lucide-react": "^0.435.0",
+		"react": "^18.3.1",
+		"react-confetti": "^6.1.0",
+		"react-dom": "^18.3.1",
+		"react-hot-toast": "^2.4.1",
+		"react-i18next": "^15.6.1",
+		"react-router-dom": "^6.26.1",
+		"react-toastify": "^11.0.5",
+		"recharts": "^2.12.7",
+		"swiper": "^11.2.10",
+		"zustand": "^4.5.5"
 	},
 	"devDependencies": {
 		"@eslint/js": "^9.9.0",

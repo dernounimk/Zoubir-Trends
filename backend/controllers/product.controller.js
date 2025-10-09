@@ -1,36 +1,73 @@
-import { redis } from "../lib/redis.js";
 import cloudinary from "../lib/cloudinary.js";
 import Product from "../models/product.model.js";
 
 export const getAllProducts = async (req, res) => {
 	try {
-		const products = await Product.find({}); // find all products
-		res.json({ products });
+		const page = parseInt(req.query.page) || 1;
+		const limit = parseInt(req.query.limit) || 10;
+		const skip = (page - 1) * limit;
+
+		const totalProducts = await Product.countDocuments();
+
+		const products = await Product.find().skip(skip).limit(limit).lean();
+
+		res.json({
+			products,
+			currentPage: page,
+			totalPages: Math.ceil(totalProducts / limit),
+			totalProducts,
+		});
 	} catch (error) {
 		console.log("Error in getAllProducts controller", error.message);
 		res.status(500).json({ message: "Server error", error: error.message });
 	}
 };
 
+export const searchProduct = async (req, res) => {
+  try {
+    const searchTerm = req.query.q || "";
+    if (!searchTerm.trim()) return res.json([]);
+
+    const products = await Product.find({
+      name: { $regex: searchTerm, $options: "i" },
+    })
+      .limit(10)
+      .lean();
+
+    const formatted = products.map(p => ({
+      id: p._id,
+      name: p.name,
+      price: p.priceAfterDiscount ?? p.priceBeforeDiscount,
+      image: p.images?.[0] || "",
+    }));
+
+    res.json(formatted);
+  } catch (error) {
+    console.error("Error in searchProduct:", error);
+    res.status(500).json({ message: "Error searching products" });
+  }
+};
+
+export const getProductById = async (req, res) => {
+	try {
+		const product = await Product.findById(req.params.id).lean();
+		if (!product) {
+			return res.status(404).json({ message: "Product not found" });
+		}
+		res.json(product);
+	} catch (error) {
+		console.log("Error in getProductById controller", error.message);
+		res.status(500).json({ message: "Server error", error: error.message });
+	}
+};
+
 export const getFeaturedProducts = async (req, res) => {
 	try {
-		let featuredProducts = await redis.get("featured_products");
-		if (featuredProducts) {
-			return res.json(JSON.parse(featuredProducts));
-		}
+		const featuredProducts = await Product.find({ isFeatured: true }).lean();
 
-		// if not in redis, fetch from mongodb
-		// .lean() is gonna return a plain javascript object instead of a mongodb document
-		// which is good for performance
-		featuredProducts = await Product.find({ isFeatured: true }).lean();
-
-		if (!featuredProducts) {
+		if (!featuredProducts || featuredProducts.length === 0) {
 			return res.status(404).json({ message: "No featured products found" });
 		}
-
-		// store in redis for future quick access
-
-		await redis.set("featured_products", JSON.stringify(featuredProducts));
 
 		res.json(featuredProducts);
 	} catch (error) {
@@ -39,31 +76,61 @@ export const getFeaturedProducts = async (req, res) => {
 	}
 };
 
+// Create Product
 export const createProduct = async (req, res) => {
-	try {
-		const { name, description, price, image, category } = req.body;
+  try {
+    const {
+      name,
+      description,
+      priceBeforeDiscount,
+      priceAfterDiscount,
+      images,
+      category,
+      sizes,
+      colors,
+    } = req.body;
 
-		let cloudinaryResponse = null;
+    // تحقق من الحقول الإلزامية
+    if (!name || !priceBeforeDiscount || !images || !category) {
+      return res.status(400).json({ message: "Please fill all required fields" });
+    }
 
-		if (image) {
-			cloudinaryResponse = await cloudinary.uploader.upload(image, { folder: "products" });
-		}
+    // رفع الصور إذا كانت Base64
+    let uploadedImages = [];
+    if (images && images.length > 0) {
+      for (let img of images) {
+        if (typeof img === "string" && img.startsWith("data:image")) {
+          const uploadRes = await cloudinary.uploader.upload(img, {
+            folder: "products",
+          });
+          uploadedImages.push(uploadRes.secure_url);
+        } else {
+          uploadedImages.push(img);
+        }
+      }
+    }
 
-		const product = await Product.create({
-			name,
-			description,
-			price,
-			image: cloudinaryResponse?.secure_url ? cloudinaryResponse.secure_url : "",
-			category,
-		});
+    const product = new Product({
+      name,
+      description,
+      priceBeforeDiscount: Number(priceBeforeDiscount),
+      priceAfterDiscount: Number(priceAfterDiscount) || null,
+      images: uploadedImages,
+      category,
+      sizes: sizes || [],
+      colors: colors || [],
+    });
 
-		res.status(201).json(product);
-	} catch (error) {
-		console.log("Error in createProduct controller", error.message);
-		res.status(500).json({ message: "Server error", error: error.message });
-	}
+    const createdProduct = await product.save();
+    res.status(201).json(createdProduct);
+
+  } catch (error) {
+	console.error("❌ Error in createProduct controller:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
 };
 
+// حذف منتج
 export const deleteProduct = async (req, res) => {
 	try {
 		const product = await Product.findById(req.params.id);
@@ -72,13 +139,14 @@ export const deleteProduct = async (req, res) => {
 			return res.status(404).json({ message: "Product not found" });
 		}
 
+		// حذف الصورة من Cloudinary
 		if (product.image) {
 			const publicId = product.image.split("/").pop().split(".")[0];
 			try {
 				await cloudinary.uploader.destroy(`products/${publicId}`);
-				console.log("deleted image from cloduinary");
+				console.log("Deleted image from Cloudinary");
 			} catch (error) {
-				console.log("error deleting image from cloduinary", error);
+				console.log("Error deleting image from Cloudinary", error);
 			}
 		}
 
@@ -92,33 +160,48 @@ export const deleteProduct = async (req, res) => {
 };
 
 export const getRecommendedProducts = async (req, res) => {
-	try {
-		const products = await Product.aggregate([
-			{
-				$sample: { size: 4 },
-			},
-			{
-				$project: {
-					_id: 1,
-					name: 1,
-					description: 1,
-					image: 1,
-					price: 1,
-				},
-			},
-		]);
+  try {
+    const products = await Product.aggregate([
+      { $sample: { size: 4 } },
+      {
+        $lookup: {
+          from: "reviews",          // اسم الكولكشن في MongoDB
+          localField: "_id",
+          foreignField: "product",
+          as: "reviews"
+        }
+      },
+      {
+        $addFields: {
+          averageRating: { $avg: "$reviews.rating" },
+          numReviews: { $size: "$reviews" }
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          description: 1,
+          images: 1,
+          priceBeforeDiscount: 1,
+          priceAfterDiscount: 1,
+          averageRating: { $ifNull: ["$averageRating", 0] },
+          numReviews: 1
+        }
+      }
+    ]);
 
-		res.json(products);
-	} catch (error) {
-		console.log("Error in getRecommendedProducts controller", error.message);
-		res.status(500).json({ message: "Server error", error: error.message });
-	}
+    res.json(products);
+  } catch (error) {
+    console.log("Error in getRecommendedProducts controller", error.message);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
 };
 
 export const getProductsByCategory = async (req, res) => {
 	const { category } = req.params;
 	try {
-		const products = await Product.find({ category });
+		const products = await Product.find({ category }).lean();
 		res.json({ products });
 	} catch (error) {
 		console.log("Error in getProductsByCategory controller", error.message);
@@ -132,7 +215,6 @@ export const toggleFeaturedProduct = async (req, res) => {
 		if (product) {
 			product.isFeatured = !product.isFeatured;
 			const updatedProduct = await product.save();
-			await updateFeaturedProductsCache();
 			res.json(updatedProduct);
 		} else {
 			res.status(404).json({ message: "Product not found" });
@@ -143,13 +225,63 @@ export const toggleFeaturedProduct = async (req, res) => {
 	}
 };
 
-async function updateFeaturedProductsCache() {
-	try {
-		// The lean() method  is used to return plain JavaScript objects instead of full Mongoose documents. This can significantly improve performance
+export const updateProduct = async (req, res) => {
+  try {
+    const {
+      name,
+      description,
+      priceBeforeDiscount,
+      priceAfterDiscount,
+      images,
+      category,
+      sizes,
+      colors,
+    } = req.body;
 
-		const featuredProducts = await Product.find({ isFeatured: true }).lean();
-		await redis.set("featured_products", JSON.stringify(featuredProducts));
-	} catch (error) {
-		console.log("error in update cache function");
+    const product = await Product.findById(req.params.id);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // إذا كان هناك صور جديدة يتم رفعها
+    let uploadedImages = product.images; // احتفظ بالقديمة افتراضياً
+    if (images && Array.isArray(images) && images.length > 0) {
+      uploadedImages = [];
+      for (const img of images) {
+        // إذا كانت الصورة Base64 أو رابط مؤقت يتم رفعها
+        if (img.startsWith("data:image")) {
+          const response = await cloudinary.uploader.upload(img, {
+            folder: "products",
+          });
+          uploadedImages.push(response.secure_url);
+        } else {
+          // إذا كانت رابط جاهز (مثلاً عند الإبقاء على الصور القديمة)
+          uploadedImages.push(img);
+        }
+      }
+    }
+
+    product.name = name ?? product.name;
+	product.description = description ?? product.description;
+	product.priceBeforeDiscount = priceBeforeDiscount ?? product.priceBeforeDiscount;
+
+	if (priceAfterDiscount === null) {
+		product.priceAfterDiscount = undefined; // حذف التخفيض
+	} else if (priceAfterDiscount !== undefined) {
+		product.priceAfterDiscount = priceAfterDiscount;
 	}
-}
+
+
+	product.images = uploadedImages;
+	product.category = category ?? product.category;
+	product.sizes = sizes ?? product.sizes;
+	product.colors = colors ?? product.colors;
+
+    const updatedProduct = await product.save();
+    res.json(updatedProduct);
+
+  } catch (error) {
+    console.log("Error in updateProduct controller", error.message);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};

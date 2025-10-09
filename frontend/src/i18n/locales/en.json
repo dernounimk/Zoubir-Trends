@@ -1,0 +1,576 @@
+{
+  "deleteOneReviewMessage": "Are you sure you want to delete this review?",
+  "deleteAllReviewMessage": "Are you sure you want to delete all reviews for this product?",
+  "removedFromFavorites": "Removed from favorites",
+  "addedToFavorites": "Added to favorites",
+  "close": "Close",
+  "deleteConfirmTitle": "Confirm Deletion",
+  "cancel": "Cancel",
+  "yesDelete": "Delete",
+  "revenueUnit": "DZD",
+  "day": "One day",
+  "twoDays": "Two days",
+  "days": "Days",
+  "categories": "Categories",
+  "other": "More Settings",
+  "orderSetting": "Delivery Settings",
+  "settingsUpdated": "Settings updated successfully",
+  "settingsUpdatedFailed": "Failed to update settings",
+  "showSetting": "Show Settings",
+  "calcRevenue": "Calculate Revenue",
+  "confirmedOrders": "Confirmed Orders",
+  "allOrders": "All Orders",
+  "category_name": "Category Name",
+  "image_selected": "Image selected",
+  "upload_image": "Upload Image",
+  "image_preview": "Image Preview",
+  "add": "Add",
+  "no_categories_found": "No categories found",
+  "delete_category": "Delete Category",
+  "sizes_and_colors": "Sizes and Colors",
+  "letters": "Letters",
+  "numbers": "Numbers",
+  "size_value": "Size Value",
+  "add_size": "Add Size",
+  "color_name": "Color Name",
+  "add_color": "Add Color",
+  "no_letter_sizes": "No letter sizes",
+  "no_number_sizes": "No number sizes",
+  "colors": "Colors",
+  "no_colors": "No colors",
+  "delete_size": "Delete Size",
+  "delete_color": "Delete Color",
+  "delete_category_done": "Category deleted successfully",
+  "delete_size_done": "Size deleted successfully",
+  "delete_color_done": "Color deleted successfully",
+  "failed_to_add_category": "Failed to add category",
+  "success_to_add_category": "Category added successfully",
+  "failed_to_add_size": "Failed to add size",
+  "success_to_add_size": "Size added successfully",
+  "failed_to_add_color": "Failed to add color",
+  "success_to_add_color": "Color added successfully",
+  "homepage": {
+    "title": "Discover Our Collections",
+    "subtitle": "Latest fashion trends with us"
+  },
+  "navbar": {
+    "home": "Home",
+    "contact": "Contact Us",
+    "follow": "Track Order",
+    "favorites": "My Favorites",
+    "searchPlaceholder": "Search for products...",
+    "toggleLanguage": "العربية",
+    "cart": "Cart",
+    "dashboard": "Dashboard",
+    "admin": "Admin",
+    "logout": "Logout"
+  },
+  "reviews": {
+    "number": "Number of Reviews",
+    "title": "Reviews",
+    "name": "Your Name",
+    "instagram": "Your Instagram Account",
+    "comment": "Your Comment",
+    "rating": "Your Rating",
+    "submit": "Submit Review",
+    "noReviews": "No reviews yet",
+    "showMore": "Show More",
+    "hide": "Hide"
+  },
+  "followOreder": {
+    "title": "Track Order",
+    "enterOrderNumber": "Please enter your order number",
+    "error": "An error occurred while tracking",
+    "list": "Your Orders List",
+    "dontHave": "You don't have any saved orders",
+    "number": "Order Number",
+    "status": "Order Status",
+    "estimatedDelivery": "Estimated Delivery Time",
+    "wait": "Wait for confirmation",
+    "deliveryAddress": "Delivery Address",
+    "phoneGuy": "Delivery Person Phone",
+    "NoPhone": "No phone number yet",
+    "phone": "Copy Phone Number",
+    "phoneSuccess": "Phone number copied",
+    "close": "Close",
+    "askForNumber": "Request Delivery Person Phone",
+    "requestSent": "Request Sent",
+    "following": "Tracking...",
+    "startFollow": "Start Tracking",
+    "message": "Request sent successfully"
+  },
+  "favoritesPage": {
+    "title": "Favorite Products",
+    "info": "Favorite products are stored locally on your device only and will be removed if they become unavailable",
+    "emptyTitle": "No products in favorites",
+    "emptySubtitle": "Add your favorite products by clicking the heart icon on product cards to save them here",
+    "startShopping": "Start Shopping Now"
+  },
+  "notFound": {
+    "title": "Page Not Found",
+    "message": "Sorry, the page you're looking for doesn't exist or has been moved",
+    "homeButton": "Back to Home",
+    "searchButton": "Search Store"
+  },
+  "faq": {
+    "title": "Frequently Asked Questions",
+    "subtitle": "Answers to the most common questions from our customers",
+    "state": "State",
+    "officePrice": "Office Delivery Price",
+    "homePrice": "Home Delivery Price",
+    "deliveryDays": "Expected Delivery Days",
+    "q1": "When will my order arrive?",
+    "a1": "Delivery time depends on the chosen shipping company and the delivery person. We provide a detailed list of shipping options, prices, and delivery times on this page so you can easily verify them before ordering.",
+    "q2": "Is there international delivery?",
+    "a2": "Currently, our shipping partner delivers within Algeria to all states and major cities.",
+    "q3": "Are there discounts available?",
+    "a3": "The store offers bulk delivery service and for large orders, there's a discount of 10-15% on some products. You can contact us directly to inquire about quantities and discounts.",
+    "q4": "Can products be exchanged?",
+    "a4": "Products can be exchanged if they are in their original condition with original packaging, and only within two days of receipt. Please take a photo of the product and send it with your city, address, and order number to exchange it for another product if the product is defective, damaged, or doesn't match what was agreed upon.",
+    "q5": "Delivery prices and time?",
+    "needHelp": "Still need help?",
+    "contactText": "If you didn't find an answer to your question, you can contact our support team 24/7",
+    "contactButton": "Contact Us"
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "subtitle": "We are committed to protecting your privacy and personal data",
+    "introduction": {
+      "title": "Introduction",
+      "content": [
+        "Our website respects your privacy and seeks to protect your personal data.",
+        "This privacy policy explains how we collect and use your personal data (under certain circumstances). It also describes the procedures we follow to ensure the privacy of your information.",
+        "Protecting your data is very important to us. Your name and other information related to you will be used in accordance with this privacy policy. We will collect information when necessary or if it is directly relevant to our transactions with you.",
+        "You can browse the website without needing to provide any personal data. Your personal identity remains anonymous during your visit to the website and is not disclosed."
+      ]
+    },
+    "dataCollection": {
+      "title": "Data We Collect",
+      "content": [
+        "We may need to collect your information if you wish to purchase a product from our website.",
+        "We collect, store, and process your data necessary to process your purchase from our website, to secure any potential claims that may arise later, and to provide you with our available services. We may collect personal information including, but not limited to, first name, last name, phone number, and delivery address.",
+        "We may provide your name and address to a third party to deliver your purchase (for example, a delivery person or supplier)."
+      ]
+    },
+    "thirdParties": {
+      "title": "Third Parties",
+      "content": [
+        "We may transfer your information to other companies in our group or to our agents and contractors to assist us in transactions related to the terms of the privacy policy. For example, we may use a third party to help us deliver products to you, receive payments from you, use it for statistics and marketing research, or assist the customer service team. We may need to share information with a third party to prevent fraud and reduce credit risks.",
+        "Your information may be disclosed to a third party without obtaining prior consent from you unless it is necessary for the purposes stated in this privacy policy, or if we are required to do so by law."
+      ]
+    },
+    "lastUpdated": "Last updated on September 15, 2025"
+  },
+  "terms": {
+    "title": "Terms of Use",
+    "subtitle": "Please read these terms carefully before using the website",
+    "introduction": {
+      "title": "Introduction",
+      "content": "When visiting this website, the customer is considered to agree to the current terms and conditions. If you do not agree to these terms and conditions, please refrain from using the website. The website administrators reserve the right to modify, update, add, or delete parts of the terms of use and conditions at any time. Changes become effective immediately upon publication on the website without prior notice. Please review the terms of use and conditions regularly to stay informed of any updates. Your continued use of the website after changes are published constitutes full acceptance of those changes."
+    },
+    "siteUsage": {
+      "title": "Site Usage",
+      "content": "To visit this website, you must be at least 18 years old or visit the website under the supervision of a parent or legal guardian."
+    },
+    "ordersPricing": {
+      "title": "Order Approval and Pricing Details",
+      "content": [
+        "Please note that in some cases, orders may not be accepted for various reasons. The website administrators reserve the right to refuse or cancel any order for any reason at any time. Before approving the order, you may be asked to provide additional verification information, such as phone number or address.",
+        "We strive to provide accurate pricing information to all users. However, errors may sometimes occur, such as incorrect product pricing on the website. Therefore, we reserve the right to refuse or cancel any order. In case of incorrect product pricing, we have the right, at our discretion, to contact you for instructions or cancel the order and notify you of the cancellation. We reserve the right to refuse or cancel any orders, whether confirmed or not."
+      ]
+    },
+    "trademarks": {
+      "title": "Trademarks and Copyright",
+      "content": "All intellectual property rights, whether registered or not, related to the website, its content, and designs, belong to us. This includes all software works, source codes, and core programs. All website content is protected by copyright as a complete integrated work. All rights reserved."
+    },
+    "jurisdiction": {
+      "title": "Governing Law and Jurisdiction",
+      "content": "These terms and conditions are interpreted and applied according to the laws in force in the country. Accordingly, each party agrees to submit to the jurisdiction of the country's judicial bodies and waive any objections regarding venue."
+    },
+    "lastUpdated": "Last updated on September 15, 2025"
+  },
+  "analytics": {
+    "totalProducts": "Total Products",
+    "featuredProducts": "Featured Products",
+    "regularProducts": "Regular Products",
+    "totalOrders": "Total Orders",
+    "confirmedOrders": "Confirmed Orders",
+    "pendingOrders": "Pending Orders",
+    "totalCoupons": "Total Coupons",
+    "activeCoupons": "Active Coupons",
+    "inactiveCoupons": "Inactive Coupons",
+    "cardTitle": {
+      "revenue": "Revenue & Discounts"
+    },
+    "totalDiscounts": "Total Discounts",
+    "netRevenueWithDelivery": "Net Revenue With Delivery",
+    "netRevenueWithoutDelivery": "Net Revenue Without Delivery",
+    "revenueUnit": "DZD",
+    "withDelivery": "With Delivery",
+    "withoutDelivery": "Without Delivery",
+    "revenueHistory": "Revenue History",
+    "last7Days": "Last 7 Days",
+    "last30Days": "Last 30 Days",
+    "last14Days": "Last 14 Days",
+    "allData": "All Data",
+    "allDates": "All Dates",
+    "numberOfOrders": "Number of Orders",
+    "date": "Date",
+    "ordersLabel": "Orders",
+    "revenueLabel": "Revenue"
+  },
+  "cart": {
+    "deleteItem": "Remove from Cart",
+    "quantity": "Quantity",
+    "price": "Price",
+    "productName": "Product Name"
+  },
+  "deliverySettings": {
+    "title": "Delivery Settings",
+    "state": "State",
+    "officePrice": "Office Delivery Price",
+    "homePrice": "Home Delivery Price",
+    "deliveryDays": "Expected Delivery Days",
+    "save": "Save Changes"
+  },
+  "coupon": {
+    "title": "Discount Management",
+    "discountLabel": "Discount Value",
+    "createButton": "Create Discount Code",
+    "creating": "Creating...",
+    "created": "Discount code created",
+    "createError": "Failed to create discount code",
+    "noCoupons": "No discount codes available",
+    "copySuccess": "Code copied",
+    "fetchError": "Failed to fetch discount codes",
+    "createdAt": "Created at: {{date}}",
+    "toggleEnable": "Enable",
+    "toggleDisable": "Disable",
+    "delete": "Delete",
+    "confirmDeleteTitle": "Confirm Deletion",
+    "confirmDeleteMessage": "Are you sure you want to delete this discount code",
+    "confirmDeleteYes": "Delete",
+    "confirmDeleteCancel": "Cancel",
+    "deleted": "Discount code deleted"
+  },
+  "productForm": {
+    "title": "Create New Product",
+    "name": "Product Name",
+    "description": "Description",
+    "priceBefore": "Price Before Discount",
+    "priceAfter": "Price After Discount",
+    "category": "Category",
+    "sizes": "Sizes",
+    "showLetters": "Show Letters",
+    "showNumbers": "Show Numbers",
+    "colors": "Colors",
+    "uploadImages": "Upload Images",
+    "creating": "Creating...",
+    "createButton": "Create Product",
+    "errors": {
+      "name": "Product name is required",
+      "priceBefore": "Price before discount must be a number",
+      "priceAfter": "Price after discount must be less than price before discount",
+      "images": "At least one image must be added",
+      "create": "An error occurred while creating the product"
+    },
+    "success": "Product created successfully"
+  },
+  "featured": {
+    "title": "Featured Products",
+    "prev": "Previous",
+    "next": "Next"
+  },
+  "footer": {
+    "description": "The best place to buy premium products at competitive prices with excellent customer service",
+    "importantInfo": "Important Information",
+    "faq": "FAQ",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Use",
+    "contactUs": "Contact Us",
+    "developedBy": "Website developed by"
+  },
+  "giftCoupon": {
+    "label": "Have a discount code?",
+    "placeholder": "Enter code here",
+    "apply": "Apply Code",
+    "remove": "Remove Discount Code",
+    "applied": "Applied Discount Code:",
+    "available": "Available Discount Code:",
+    "discount": "Discount {{amount}} DَA"
+  },
+  "orders": {
+    "numberSaved": "Delivery person phone number saved",
+    "title": "Orders List",
+    "selected": "{{count}} order selected",
+    "askForNumber": " and customer requests delivery person phone number",
+    "deleteSelected": "Delete Selected",
+    "cancelSelection": "Cancel Selection",
+    "confirmSingle": "Confirm Order",
+    "confirmSelected": "Confirm Selected",
+    "unconfirmSelected": "Unconfirm Selected",
+    "viewDetails": "View Order Details",
+    "confirmSuccess": "{{count}} orders confirmed",
+    "unconfirmSuccess": "{{count}} orders unconfirmed",
+    "toggleError": "An error occurred while changing status",
+    "selectAll": "Select All",
+    "all": "All Statuses",
+    "confirmed": "Confirmed",
+    "pending": "Unconfirmed",
+    "lastFirst": "Oldest First",
+    "requireNumber": "Delivery person required",
+    "searchBy": "Search by",
+    "changeSearch": "Change search type",
+    "orderNumber": "Order Number",
+    "phoneNumber": "Phone Number",
+    "fullName": "Customer Name",
+    "headers": {
+      "products": "Products",
+      "num": "No.",
+      "number": "Order Number",
+      "customer": "Customer",
+      "phone": "Phone",
+      "wilaya": "Wilaya",
+      "baladia": "Baladia",
+      "status": "Status",
+      "total": "Total",
+      "date": "Date",
+      "details": "Details"
+    },
+    "deliveryOptions": {
+      "home": "Home",
+      "office": "Office"
+    },
+    "confirmError": "An error occurred while confirming orders",
+    "confirmDelete": "Confirm Deletion",
+    "confirmSingleDelete": "Are you sure you want to delete this order?",
+    "confirmMultiple": "Are you sure you want to delete {{count}} orders?",
+    "confirmYes": "Delete",
+    "confirmCancel": "Cancel",
+    "noOrders": "No orders to display",
+    "moreProducts": "+{{count}} more products",
+    "copyPhone": "Phone number copied",
+    "detailsTitle": "Order Details",
+    "fields": {
+      "orderNumber": "Order Number",
+      "customer": "Customer",
+      "phone": "Phone",
+      "wilaya": "Wilaya",
+      "baladia": "Baladia",
+      "deliveryPlace": "Delivery Place",
+      "deliveryPrice": "Delivery Price",
+      "total": "Total Amount",
+      "date": "Order Date",
+      "coupon": "Discount Code",
+      "note": "Note",
+      "noNote": "No notes",
+      "products": "Products",
+      "noImage": "No image",
+      "status": "Order Status",
+      "product": "Product",
+      "close": "Close",
+      "confirmedAt": "Confirmation Date",
+      "deliveryPhone": "Delivery Person Phone",
+      "save": "Save"
+    },
+    "deleteSuccess": "{{count}} orders deleted successfully",
+    "deleteSingle": "Order deleted successfully"
+  },
+  "orderSummary": {
+    "title": "Order Summary",
+    "originalPrice": "Original Price",
+    "coupon": "Discount Coupon",
+    "delivery": "Delivery",
+    "total": "Total",
+    "confirmOrder": "Confirm Order",
+    "or": "Or",
+    "continueShopping": "Continue Shopping"
+  },
+  "relate": {
+    "relatedProducts": "Related Products",
+    "noRelatedProducts": "No related products available"
+  },
+  "addToCart": "Add to Cart",
+  "wilayaSelector": {
+    "wilaya": "Wilaya",
+    "selectWilaya": "Select Wilaya"
+  },
+  "productsList": {
+    "noProducts": "No products to display",
+    "deleteConfirmMessage": "Are you sure you want to delete this product?",
+    "onlyDiscounted": "Discounted Only",
+    "onlyFeatured": "Featured Only",
+    "allCategories": "All Categories",
+    "searchPlaceholder": "Search for a product...",
+    "headers": {
+      "product": "Product",
+      "price": "Price",
+      "category": "Category",
+      "actions": "Actions"
+    },
+    "copySuccess": "Product link copied",
+    "deleteSuccess": "Product deleted",
+    "confirmDeleteMessage": "Are you sure you want to delete this product?",
+    "featureSuccess": "Product featured",
+    "unfeatureSuccess": "Product unfeatured"
+  },
+  "login": {
+    "success": "Logged in successfully",
+    "error": "Login failed"
+  },
+  "logout": {
+    "success": "Logged out successfully",
+    "error": "Logout failed"
+  },
+  "productEditForm": {
+    "titleEdit": "Edit Product",
+    "close": "Close",
+    "name": "Product Name",
+    "priceBefore": "Price Before Discount",
+    "priceAfter": "Price After Discount",
+    "cancelDiscount": "Cancel Discount",
+    "colors": "Colors",
+    "sizes": "Sizes",
+    "showLetters": "Show Letters",
+    "showNumbers": "Show Numbers",
+    "letters": "Letters",
+    "numbers": "Numbers",
+    "uploadImages": "Product Images",
+    "removeImage": "Delete Image",
+    "category": "Category",
+    "description": "Description",
+    "saveChanges": "Save Changes",
+    "success": "Product updated"
+  },
+  "detailOf": {
+    "productDetails": "Product Details",
+    "name": "Name",
+    "priceAfterDiscount": "Price After Discount",
+    "priceBeforeDiscount": "Price Before Discount",
+    "category": "Category",
+    "description": "Description",
+    "noDescription": "No description",
+    "status": "Status",
+    "notExist": "Not Exist",
+    "featured": "Featured",
+    "normal": "Normal",
+    "colors": "Colors",
+    "sizes": "Sizes",
+    "close": "Close",
+    "createdAt": "Creation Date",
+    "updatedAt": "Last Update Date"
+  },
+  "adminLogin": {
+    "title": "Login",
+    "emailLabel": "Email",
+    "emailPlaceholder": "you@example.com",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "••••••••",
+    "loginButton": "Login",
+    "loading": "Loading..."
+  },
+  "adminPage": {
+    "title": "Admin Dashboard",
+    "tabs": {
+      "create": "Create Product",
+      "products": "Products",
+      "analytics": "Analytics",
+      "orders": "Orders",
+      "coupons": "Discount Codes",
+      "settings": "Settings"
+    },
+    "settings": {
+      "title": "Site Settings",
+      "categories": "Categories",
+      "addCategory": "Add New Category",
+      "sizes": "Sizes",
+      "addSize": "Add New Size",
+      "colors": "Colors",
+      "addColor": "Add New Color"
+    }
+  },
+  "cartPage": {
+    "empty": {
+      "title": "Shopping Cart is Empty",
+      "description": "It seems you haven't added anything to your cart yet",
+      "startShopping": "Start Shopping"
+    }
+  },
+  "categoryPage": {
+    "noProducts": "No Products",
+    "title": "{{category}}",
+    "noProductsHint": "Back to home page"
+  },
+  "contact": {
+    "title": "Contact Us",
+    "instagram": "Instagram",
+    "phone": "Phone",
+    "location": "Location"
+  },
+  "home": {
+    "exploreCategories": "Explore Our Categories",
+    "discoverTrends": "Discover the latest trends in eco-friendly fashion"
+  },
+  "product": {
+    "notFound": "Product Not Found",
+    "addedToCart": "Added to Cart",
+    "color": "Color",
+    "size": "Size",
+    "quantity": "Quantity",
+    "addToCart": "Add to Cart",
+    "image": "Image",
+    "loadError": "An error occurred while loading the product",
+    "selectColor": "Please select a color",
+    "selectSize": "Please select a size",
+    "enterName": "Please enter your name",
+    "enterInstagram": "Please enter your Instagram username",
+    "enterComment": "Please enter your comment",
+    "selectStars": "Please select number of stars",
+    "invalidInstagram": "Invalid Instagram username",
+    "reviewAdded": "Your review has been added",
+    "reviewAddFailed": "Failed to add review"
+  },
+  "purchaseSuccess": {
+    "orderConfirmed": "Your Order Has Been Received",
+    "orderPlaced": "We will call or message you before delivery",
+    "thanks": "Thank you for your trust",
+    "paymentMethod": "Payment Method",
+    "cashOnDelivery": "Cash on Delivery",
+    "estimatedDelivery": "Estimated Delivery Time",
+    "deliveryTime": "1-3 days",
+    "days": "Day",
+    "orderNumber": "Order Number",
+    "follow": "Order Tracking Service",
+    "continueShopping": "Continue Shopping",
+    "copyNumberSuccess": "Order number copied",
+    "copyNumber": "Copy Order Number"
+  },
+  "shippingInfo": {
+    "title": "Customer Information",
+    "fullName": "Full Name",
+    "phoneNumber": "Phone Number",
+    "baladia": "Baladia",
+    "note": "Note",
+    "deliveryPlace": "Delivery Place",
+    "home": "Home",
+    "office": "Office",
+    "confirmOrder": "Confirm Order",
+    "detail": "Details",
+    "emptyCart": {
+      "title": "Shopping Cart is Empty",
+      "subtitle": "It seems you haven't added any products to the cart yet.",
+      "startShopping": "Start Shopping"
+    },
+    "errors": {
+      "invalidFullName": "Please enter a valid full name",
+      "invalidPhone": "Invalid phone number",
+      "selectWilaya": "Please select a wilaya",
+      "invalidBaladia": "Please enter a valid baladia name",
+      "orderFailed": "Failed to submit order",
+      "orderError": "An error occurred while submitting the order"
+    },
+    "success": {
+      "orderSent": "Order sent successfully"
+    }
+  }
+}
