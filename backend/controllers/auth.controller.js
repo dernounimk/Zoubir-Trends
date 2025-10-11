@@ -34,7 +34,7 @@ export const login = asyncHandler(async (req, res) => {
 
 	const accessToken = generateAccessToken(user._id);
 	const refreshToken = generateRefreshToken(user._id);
-	
+
 res.cookie("accessToken", accessToken, {
   httpOnly: true,
   secure: true, // فقط HTTPS
@@ -54,7 +54,7 @@ res.cookie("refreshToken", refreshToken, {
 		message: "تم تسجيل الدخول بنجاح",
 		user: {
 			id: user._id,
-			fullName: user.fullName,
+			name: user.name,
 			email: user.email,
 		},
 	});
