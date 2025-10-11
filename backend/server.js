@@ -28,7 +28,6 @@ const PORT = process.env.PORT || 5000;
 app.use(cors({
   origin: [
     "http://localhost:5173", // Vite dev server
-    "https://your-store.netlify.app", // ⬅️ غير هذا لرابط Netlify الخاص بك
     "https://zoubir-trends.vercel.app"
   ],
   credentials: true

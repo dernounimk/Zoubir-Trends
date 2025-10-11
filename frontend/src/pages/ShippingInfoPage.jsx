@@ -33,25 +33,22 @@ const ShippingInfoPage = () => {
     fetchMetaData();
   }, []);
 
-    useEffect(() => {
-      const validateCartProducts = async () => {
-        for (const item of cart) {
-          try {
-            await axios.get(`/products/${item._id}`);
-          } catch {
-            removeFromCart(item._id, item.selectedColor, item.selectedSize);
-          }
+  useEffect(() => {
+    const validateCartProducts = async () => {
+      for (const item of cart) {
+        try {
+          await axios.get(`/products/${item._id}`);
+        } catch {
+          removeFromCart(item._id, item.selectedColor, item.selectedSize);
         }
-        calculateTotals();
-      };
-  
-      if (cart.length > 0) {
-        validateCartProducts();
       }
-    }, [cart, removeFromCart, calculateTotals]);
+      calculateTotals();
+    };
+
+    if (cart.length > 0) validateCartProducts();
+  }, [cart, removeFromCart, calculateTotals]);
 
   const navigate = useNavigate();
-
   const [form, setForm] = useState({
     fullName: "",
     phoneNumber: "",
@@ -60,41 +57,38 @@ const ShippingInfoPage = () => {
     deliveryPlace: "office",
     note: "",
   });
-
   const [selectedWilaya, setSelectedWilaya] = useState("");
 
   const generateOrderNumber = () => {
-     let num = "";
-      const chars = "0123456789";
-      for (let i = 0; i < 5; i++) {
-        num += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-      return num;
-  }
+    let num = "";
+    const chars = "0123456789";
+    for (let i = 0; i < 5; i++) {
+      num += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return num;
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    const updatedForm = { ...form, [name]: value };
-    setForm(updatedForm);
-  
-    const deliveryKey = form.deliveryPlace === "office"? "officePrice": "homePrice";
+    setForm({ ...form, [name]: value });
+
+    const deliveryKey = form.deliveryPlace === "office" ? "officePrice" : "homePrice";
     const selectedDelivery = deliverySettings.find(d => d.state === selectedWilaya);
-    const price = selectedDelivery? selectedDelivery[deliveryKey] || 0: 0;
+    const price = selectedDelivery ? selectedDelivery[deliveryKey] || 0 : 0;
     setDeliveryPrice(price);
   };
 
   useEffect(() => {
     if (selectedWilaya) {
-      const deliveryKey = form.deliveryPlace === "office"? "officePrice": "homePrice";
+      const deliveryKey = form.deliveryPlace === "office" ? "officePrice" : "homePrice";
       const selectedDelivery = deliverySettings.find(d => d.state === selectedWilaya);
-      const price = selectedDelivery? selectedDelivery[deliveryKey] || 0: 0;
+      const price = selectedDelivery ? selectedDelivery[deliveryKey] || 0 : 0;
       setDeliveryPrice(price);
     }
   }, [selectedWilaya, form.deliveryPlace, setDeliveryPrice]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!form.fullName.trim() || form.fullName.trim().length < 3) {
       toast.error(t("shippingInfo.errors.invalidFullName"));
       return;
@@ -118,9 +112,9 @@ const ShippingInfoPage = () => {
 
     setShippingInfo({ ...form, wilaya: selectedWilaya });
 
-    let orderNumber = generateOrderNumber();
+    const orderNumber = generateOrderNumber();
     const selectedDelivery = deliverySettings.find(d => d.state === selectedWilaya);
-    const deliveryDays = selectedDelivery? selectedDelivery.deliveryDays: null;
+    const deliveryDays = selectedDelivery ? selectedDelivery.deliveryDays : null;
 
     const orderData = {
       orderNumber,
@@ -155,7 +149,6 @@ const ShippingInfoPage = () => {
         return;
       }
 
-      const data = await response.json();
       toast.success(t("shippingInfo.success.orderSent"));
       navigate("/purchase-success", { state: { orderNumber, deliveryDays } });
     } catch (error) {
@@ -170,109 +163,69 @@ const ShippingInfoPage = () => {
       : 0;
 
   return (
-    <div className="py-8 md:py-12 px-4 md:px-6 max-w-screen-xl mx-auto">
+    <div className="py-10 px-4 md:px-8 max-w-screen-xl mx-auto">
       {cart.length === 0 ? (
         <EmptyCartUI t={t} />
       ) : (
-        <div className="grid lg:grid-cols-2 gap-10">
+        <div className="grid lg:grid-cols-2 gap-12">
           <motion.div
-            className="w-full"
+            className="w-full bg-[var(--color-bg)] p-6 rounded-2xl shadow-md"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.4 }}
           >
-            <h2 className="text-2xl font-bold mb-6 text-[var(--color-text)] border-b pb-2">
+            <h2 className="text-3xl font-bold mb-6 text-[var(--color-text)] border-b border-[var(--color-border)] pb-3">
               {t("shippingInfo.title")}
             </h2>
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div>
-                <label htmlFor="fullName" className="block text-sm font-medium text-[var(--color-text-secondary)]">
-                  {t("shippingInfo.fullName")}
-                </label>
-                <input
-                  type="text"
-                  id="fullName"
-                  name="fullName"
-                  value={form.fullName}
-                  onChange={handleChange}
-                  className="mt-1 block w-full bg-[var(--color-bg-gray)] border border-[var(--color-bg-gray)] rounded-md shadow-sm py-2 px-3 text-[var(--color-text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-[var(--color-accent)]"
-                />
-              </div>
-              <div>
-                <label htmlFor="phoneNumber" className="block text-sm font-medium text-[var(--color-text-secondary)]">
-                  {t("shippingInfo.phoneNumber")}
-                </label>
-                <input
-                  type="text"
-                  id="phoneNumber"
-                  name="phoneNumber"
-                  value={form.phoneNumber}
-                  onChange={handleChange}
-                  className="mt-1 block w-full bg-[var(--color-bg-gray)] border border-[var(--color-bg-gray)] rounded-md shadow-sm py-2 px-3 text-[var(--color-text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-[var(--color-accent)]"
-                />
-              </div>
-              <WilayaSelector
-                selectedWilaya={selectedWilaya}
-                setSelectedWilaya={setSelectedWilaya}
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/** Full Name */}
+              <InputField
+                label={t("shippingInfo.fullName")}
+                id="fullName"
+                name="fullName"
+                value={form.fullName}
+                onChange={handleChange}
               />
+              {/** Phone Number */}
+              <InputField
+                label={t("shippingInfo.phoneNumber")}
+                id="phoneNumber"
+                name="phoneNumber"
+                value={form.phoneNumber}
+                onChange={handleChange}
+              />
+              {/** Wilaya Selector */}
+              <WilayaSelector selectedWilaya={selectedWilaya} setSelectedWilaya={setSelectedWilaya} />
+              {/** Baladia */}
+              <InputField
+                label={t("shippingInfo.baladia")}
+                id="baladia"
+                name="baladia"
+                value={form.baladia}
+                onChange={handleChange}
+              />
+              {/** Note */}
               <div>
-                <label htmlFor="baldia" className="block text-sm font-medium text-[var(--color-text-secondary)]">
-                  {t("shippingInfo.baladia")}
-                </label>
-                <input
-                  type="text"
-                  id="baldia"
-                  name="baladia"
-                  value={form.baladia}
-                  onChange={handleChange}
-                  className="mt-1 block w-full bg-[var(--color-bg-gray)] border border-[var(--color-bg-gray)] rounded-md shadow-sm py-2 px-3 text-[var(--color-text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-[var(--color-accent)]"
-                />
-              </div>
-              <div>
-                <label className="block mb-1 text-[var(--color-text-secondary)]">{t("shippingInfo.note")}</label>
+                <label className="block mb-2 text-[var(--color-text-secondary)] font-medium">{t("shippingInfo.note")}</label>
                 <textarea
                   name="note"
                   value={form.note}
                   onChange={handleChange}
                   rows="3"
-                  className="mt-1 block w-full bg-[var(--color-bg-gray)] border border-[var(--color-bg-gray)] rounded-md shadow-sm py-2 px-3 text-[var(--color-text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-[var(--color-accent)]"
+                  className="w-full bg-[var(--color-bg-gray)] border border-[var(--color-border)] rounded-xl py-3 px-4 text-[var(--color-text-secondary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-[var(--color-accent)] transition"
                 />
               </div>
-              <div>
-                <span className="block mb-2 font-medium text-[var(--color-text-secondary)]">{t("shippingInfo.deliveryPlace")}</span>
-                <div className="flex items-center gap-6">
-                  <label className="flex items-center cursor-pointer gap-2 text-[var(--color-text-secondary)]">
-                    <input
-                      type="radio"
-                      name="deliveryPlace"
-                      value="office"
-                      checked={form.deliveryPlace === "office"}
-                      onChange={handleChange}
-                      className="w-6 h-6 accent-[var(--color-accent)] cursor-pointer"
-                    />
-                    {t("shippingInfo.office")}
-                  </label>
-                  <label className="flex items-center gap-2 text-[var(--color-text-secondary)] cursor-pointer">
-                    <input
-                      type="radio"
-                      name="deliveryPlace"
-                      value="home"
-                      checked={form.deliveryPlace === "home"}
-                      onChange={handleChange}
-                      className="w-6 h-6 accent-[var(--color-accent)] cursor-pointer"
-                    />
-                    {t("shippingInfo.home")}
-                  </label>
-                </div>
-              </div>
+              {/** Delivery Place */}
+              <DeliveryPlaceSelector form={form} handleChange={handleChange} t={t} />
               <button
                 type="submit"
-                className="bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white w-full text-center font-medium py-2.5 px-4 rounded-lg shadow-md transition duration-200"
+                className="w-full bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white font-semibold py-3 rounded-xl shadow-lg transition duration-200 text-lg"
               >
                 {t("shippingInfo.confirmOrder")}
               </button>
             </form>
           </motion.div>
+
           <motion.div
             className="space-y-6"
             initial={{ opacity: 0, x: 20 }}
@@ -295,18 +248,64 @@ const ShippingInfoPage = () => {
   );
 };
 
+/** Input Field Component */
+const InputField = ({ label, id, name, value, onChange }) => (
+  <div>
+    <label htmlFor={id} className="block mb-2 text-sm font-medium text-[var(--color-text-secondary)]">{label}</label>
+    <input
+      type="text"
+      id={id}
+      name={name}
+      value={value}
+      onChange={onChange}
+      className="w-full bg-[var(--color-bg-gray)] border border-[var(--color-border)] rounded-xl py-3 px-4 text-[var(--color-text-secondary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-[var(--color-accent)] transition"
+    />
+  </div>
+);
+
+/** Delivery Place Radio Selector */
+const DeliveryPlaceSelector = ({ form, handleChange, t }) => (
+  <div>
+    <span className="block mb-2 font-medium text-[var(--color-text-secondary)]">{t("shippingInfo.deliveryPlace")}</span>
+    <div className="flex items-center gap-6">
+      <label className="flex items-center gap-2 cursor-pointer text-[var(--color-text-secondary)]">
+        <input
+          type="radio"
+          name="deliveryPlace"
+          value="office"
+          checked={form.deliveryPlace === "office"}
+          onChange={handleChange}
+          className="w-5 h-5 accent-[var(--color-accent)] cursor-pointer"
+        />
+        {t("shippingInfo.office")}
+      </label>
+      <label className="flex items-center gap-2 cursor-pointer text-[var(--color-text-secondary)]">
+        <input
+          type="radio"
+          name="deliveryPlace"
+          value="home"
+          checked={form.deliveryPlace === "home"}
+          onChange={handleChange}
+          className="w-5 h-5 accent-[var(--color-accent)] cursor-pointer"
+        />
+        {t("shippingInfo.home")}
+      </label>
+    </div>
+  </div>
+);
+
 const EmptyCartUI = ({ t }) => (
   <motion.div
-    className="flex flex-col items-center justify-center space-y-4 py-16"
+    className="flex flex-col items-center justify-center space-y-5 py-20"
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.5 }}
   >
-    <ShoppingCart className="h-24 w-24 text-[var(--color-text-secondary)]" />
-    <h3 className="text-2xl font-semibold ">{t("shippingInfo.emptyCart.title")}</h3>
-    <p className="text-[var(--color-text-secondary)]">{t("shippingInfo.emptyCart.subtitle")}</p>
+    <ShoppingCart className="h-24 w-24 text-[var(--color-text-muted)]" />
+    <h3 className="text-2xl font-bold text-[var(--color-text)]">{t("shippingInfo.emptyCart.title")}</h3>
+    <p className="text-[var(--color-text-secondary)] text-center max-w-xs">{t("shippingInfo.emptyCart.subtitle")}</p>
     <Link
-      className="mt-4 rounded-md bg-[var(--color-accent)] px-6 py-2 text-white transition-colors hover:bg-[var(--color-accent-hover)]"
+      className="mt-4 rounded-xl bg-[var(--color-accent)] px-6 py-3 text-white font-medium transition hover:bg-[var(--color-accent-hover)] shadow-md"
       to="/"
     >
       {t("shippingInfo.emptyCart.startShopping")}
