@@ -1,102 +1,165 @@
 import User from "../models/user.model.js";
-import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import asyncHandler from "express-async-handler";
+import bcrypt from "bcryptjs";
 
 // توليد Access Token
 const generateAccessToken = (userId) => {
-	return jwt.sign({ userId }, process.env.ACCESS_TOKEN_SECRET, {
-		expiresIn: "15m",
-	});
+  return jwt.sign({ userId }, process.env.ACCESS_TOKEN_SECRET, {
+    expiresIn: "15m",
+  });
 };
 
 // توليد Refresh Token
 const generateRefreshToken = (userId) => {
-	return jwt.sign({ userId }, process.env.REFRESH_TOKEN_SECRET, {
-		expiresIn: "7d",
-	});
+  return jwt.sign({ userId }, process.env.REFRESH_TOKEN_SECRET, {
+    expiresIn: "7d",
+  });
 };
 
-export const login = asyncHandler(async (req, res) => {
-	const { email, password } = req.body;
-
-	const user = await User.findOne({ email });
-	if (!user) {
-		res.status(401);
-		throw new Error("البريد الإلكتروني أو كلمة المرور غير صحيحة");
-	}
-
-	const isPasswordCorrect = await bcrypt.compare(password, user.password);
-	if (!isPasswordCorrect) {
-		res.status(401);
-		throw new Error("البريد الإلكتروني أو كلمة المرور غير صحيحة");
-	}
-
-	const accessToken = generateAccessToken(user._id);
-	const refreshToken = generateRefreshToken(user._id);
-
-res.cookie("accessToken", accessToken, {
+// إعداد الكوكيز حسب البيئة
+const cookieOptions = {
   httpOnly: true,
-  secure: true, // فقط HTTPS
-  sameSite: "none", // ضروري للسماح عبر النطاقات
-  maxAge: 15 * 60 * 1000,
-});
+  secure: process.env.NODE_ENV === "production",
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+};
 
-res.cookie("refreshToken", refreshToken, {
-  httpOnly: true,
-  secure: true,
-  sameSite: "none",
-  maxAge: 7 * 24 * 60 * 60 * 1000,
-});
+// ✅ تسجيل المستخدم (إن أردت لاحقاً)
+export const register = async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
 
+    if (!name || !email || !password)
+      return res.status(400).json({ message: "All fields are required" });
 
-	res.json({
-		message: "تم تسجيل الدخول بنجاح",
-		user: {
-			id: user._id,
-			name: user.name,
-			email: user.email,
-		},
-	});
-});
+    const existingUser = await User.findOne({ email });
+    if (existingUser)
+      return res.status(400).json({ message: "User already exists" });
 
-// تجديد التوكن
-export const refreshAccessToken = asyncHandler(async (req, res) => {
-	const token = req.cookies.refreshToken;
+    const newUser = await User.create({ name, email, password });
+    res.status(201).json({
+      message: "User registered successfully",
+      user: {
+        id: newUser._id,
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
-	if (!token) {
-		res.status(401);
-		throw new Error("Refresh Token غير موجود");
-	}
+// ✅ تسجيل الدخول (Login)
+export const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
-	try {
-		const decoded = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET);
+    // تحقق من المدخلات
+    if (!email || !password)
+      return res.status(400).json({ message: "Email and password are required" });
 
-		const newAccessToken = generateAccessToken(decoded.userId);
-		res.cookie("accessToken", newAccessToken, {
-			httpOnly: true,
-			secure: process.env.NODE_ENV === "production",
-			maxAge: 15 * 60 * 1000,
-		});
+    // البحث عن المستخدم
+    const user = await User.findOne({ email });
+    if (!user) return res.status(400).json({ message: "Invalid credentials" });
 
-		res.json({ message: "تم تجديد التوكن" });
-	} catch (err) {
-		res.status(403);
-		throw new Error("توكن غير صالح أو منتهي");
-	}
-});
+    // التحقق من كلمة السر
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
 
-// تسجيل الخروج
-export const logout = asyncHandler(async (req, res) => {
-	// لا حاجة لحذف من Redis
-	res.clearCookie("accessToken");
-	res.clearCookie("refreshToken");
+    // توليد التوكنات
+    const accessToken = generateAccessToken(user._id);
+    const refreshToken = generateRefreshToken(user._id);
 
-	res.json({ message: "تم تسجيل الخروج بنجاح" });
-});
+    // حفظ refresh token في المستخدم
+    user.refreshToken = refreshToken;
+    await user.save();
 
-// الملف الشخصي
-export const getProfile = asyncHandler(async (req, res) => {
-	const user = await User.findById(req.user._id).select("-password");
-	res.json(user);
-});
+    // إرسال الكوكيز
+    res.cookie("accessToken", accessToken, {
+      ...cookieOptions,
+      maxAge: 15 * 60 * 1000,
+    });
+
+    res.cookie("refreshToken", refreshToken, {
+      ...cookieOptions,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    res.json({
+      message: "Login successful",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// ✅ تجديد التوكن (عند انتهاء صلاحية accessToken)
+export const refreshToken = async (req, res) => {
+  try {
+    const token = req.cookies.refreshToken;
+    if (!token) return res.status(401).json({ message: "No refresh token provided" });
+
+    // تحقق من صحة refresh token
+    const decoded = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET);
+    const user = await User.findById(decoded.userId);
+    if (!user || user.refreshToken !== token)
+      return res.status(403).json({ message: "Invalid refresh token" });
+
+    // توليد Access جديد
+    const newAccessToken = generateAccessToken(user._id);
+    res.cookie("accessToken", newAccessToken, {
+      ...cookieOptions,
+      maxAge: 15 * 60 * 1000,
+    });
+
+    res.json({ message: "Token refreshed" });
+  } catch (error) {
+    res.status(401).json({ message: "Invalid or expired refresh token" });
+  }
+};
+
+// ✅ تسجيل الخروج
+export const logout = async (req, res) => {
+  try {
+    const token = req.cookies.refreshToken;
+    if (token) {
+      const decoded = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET);
+      await User.findByIdAndUpdate(decoded.userId, { refreshToken: null });
+    }
+
+    res.clearCookie("accessToken", {
+      ...cookieOptions,
+    });
+    res.clearCookie("refreshToken", {
+      ...cookieOptions,
+    });
+
+    res.json({ message: "Logged out successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// ✅ التحقق من المستخدم الحالي
+export const getCurrentUser = async (req, res) => {
+  try {
+    const token = req.cookies.accessToken;
+    if (!token) return res.status(401).json({ message: "Not authenticated" });
+
+    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    const user = await User.findById(decoded.userId).select("-password");
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    res.json(user);
+  } catch (error) {
+    res.status(401).json({ message: "Invalid token" });
+  }
+};
