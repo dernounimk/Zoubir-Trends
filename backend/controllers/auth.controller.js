@@ -34,20 +34,21 @@ export const login = asyncHandler(async (req, res) => {
 
 	const accessToken = generateAccessToken(user._id);
 	const refreshToken = generateRefreshToken(user._id);
+	
+res.cookie("accessToken", accessToken, {
+  httpOnly: true,
+  secure: true, // فقط HTTPS
+  sameSite: "none", // ضروري للسماح عبر النطاقات
+  maxAge: 15 * 60 * 1000,
+});
 
-	res.cookie("accessToken", accessToken, {
-		httpOnly: true,
-		secure: process.env.NODE_ENV === "production",
-		sameSite: "none", // ✅ ضروري جداً
-		maxAge: 15 * 60 * 1000,
-	});
+res.cookie("refreshToken", refreshToken, {
+  httpOnly: true,
+  secure: true,
+  sameSite: "none",
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+});
 
-	res.cookie("refreshToken", refreshToken, {
-		httpOnly: true,
-		secure: process.env.NODE_ENV === "production",
-		sameSite: "none", // ✅ ضروري جداً
-		maxAge: 7 * 24 * 60 * 60 * 1000,
-	});
 
 	res.json({
 		message: "تم تسجيل الدخول بنجاح",

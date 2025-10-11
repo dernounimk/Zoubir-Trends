@@ -25,13 +25,14 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // ⬅️ إعدادات CORS محدثة
-app.use(cors({
-  origin: [
-    "http://localhost:5173", // Vite dev server
-    "https://zoubir-trends.vercel.app"
-  ],
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL,
+    credentials: true, // يسمح بإرسال الكوكيز
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
 const __dirname = path.resolve();
 
