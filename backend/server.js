@@ -15,40 +15,26 @@ import reviewRoutes from "./routes/review.route.js";
 import { connectDB } from "./lib/db.js";
 
 dotenv.config();
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 const __dirname = path.resolve();
 
-// ===== إعداد CORS =====
-const allowedOrigins = [
-  "https://zoubir-trends.vercel.app",
-  "http://localhost:5173",
-];
-
+// ✅ CORS مضبوط بشكل صحيح
 app.use(
   cors({
-    origin: function (origin, callback) {
-      // السماح للطلبات بدون origin (مثل Postman)
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
+    origin: process.env.CLIENT_URL, // رابط الفرونت بالضبط
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
-// السماح بطلبات preflight
-app.options("*", cors());
-
-// ===== Middleware =====
+// ✅ body parser + cookie parser
 app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 
-// ===== Routes =====
+// ✅ الرواتس
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/cart", cartRoutes);
@@ -58,18 +44,17 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/reviews", reviewRoutes);
 
-// ===== خدمة ملفات الـ frontend في الإنتاج =====
+// ✅ خدمة ملفات frontend في production
 if (process.env.NODE_ENV === "production") {
-  const frontendPath = path.join(__dirname, "../frontend/dist");
-  app.use(express.static(frontendPath));
+  app.use(express.static(path.join(__dirname, "../frontend/dist")));
 
   app.get("*", (req, res) => {
-    res.sendFile(path.resolve(frontendPath, "index.html"));
+    res.sendFile(path.resolve(__dirname, "../frontend/dist", "index.html"));
   });
 }
 
-// ===== تشغيل السيرفر =====
+// ✅ تشغيل السيرفر مع الاتصال بقاعدة البيانات
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`✅ Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+  console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
   connectDB();
 });
