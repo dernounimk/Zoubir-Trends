@@ -18,9 +18,9 @@ const generateRefreshToken = (userId) => {
 // ===== إعداد الكوكيز =====
 const cookieOptions = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production", // HTTPS فقط في الإنتاج
-  sameSite: "None", // ضروري لعمل الكوكيز عبر الدومينات (Vercel + Render)
-  path: "/", // مهم جداً لحذف الكوكيز لاحقاً
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "None",
+  path: "/",
 };
 
 // ===== تسجيل الدخول =====
@@ -39,8 +39,11 @@ export const login = async (req, res) => {
     const accessToken = generateAccessToken(user._id);
     const refreshToken = generateRefreshToken(user._id);
 
-    user.refreshToken = refreshToken;
-    await user.save();
+    // استخدام updateOne بدلاً من save لتجنب مشاكل التحقق
+    await User.updateOne(
+      { _id: user._id },
+      { $set: { refreshToken } }
+    );
 
     // إرسال الكوكيز للمتصفح
     res.cookie("accessToken", accessToken, {
@@ -62,6 +65,7 @@ export const login = async (req, res) => {
       },
     });
   } catch (error) {
+    console.error("Login error:", error);
     return res.status(500).json({ message: error.message });
   }
 };
@@ -75,12 +79,12 @@ export const logout = async (req, res) => {
       await User.findByIdAndUpdate(decoded.userId, { refreshToken: null });
     }
 
-    // حذف الكوكيز بنفس الإعدادات تماماً
     res.clearCookie("accessToken", { ...cookieOptions });
     res.clearCookie("refreshToken", { ...cookieOptions });
 
     return res.json({ message: "Logged out successfully" });
   } catch (error) {
+    console.error("Logout error:", error);
     return res.status(500).json({ message: error.message });
   }
 };
@@ -106,6 +110,7 @@ export const refreshToken = async (req, res) => {
 
     return res.json({ message: "Token refreshed" });
   } catch (error) {
+    console.error("Refresh token error:", error);
     return res.status(401).json({ message: "Invalid or expired refresh token" });
   }
 };
@@ -122,6 +127,7 @@ export const getCurrentUser = async (req, res) => {
 
     return res.json(user);
   } catch (error) {
+    console.error("Get current user error:", error);
     return res.status(401).json({ message: "Invalid token" });
   }
 };

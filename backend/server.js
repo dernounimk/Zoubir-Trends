@@ -28,7 +28,6 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: function (origin, callback) {
-      // السماح للطلبات بدون origin (مثل Postman)
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
@@ -46,6 +45,7 @@ app.options("*", cors());
 
 // ===== Middleware =====
 app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // ===== Routes =====
