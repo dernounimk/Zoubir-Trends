@@ -60,19 +60,7 @@ export const getSettings = async (req, res) => {
       });
     }
 
-    // تأكد من أن جميع الحقول موجودة وليست undefined
-    const safeSettings = {
-      _id: settings._id,
-      categories: settings.categories || [],
-      sizes: settings.sizes || [],
-      colors: settings.colors || [],
-      delivery: settings.delivery || [],
-      orderCalculation: settings.orderCalculation || "all",
-      createdAt: settings.createdAt,
-      updatedAt: settings.updatedAt
-    };
-
-    res.json(safeSettings);
+    res.json(settings);
   } catch (err) {
     console.error("getSettings:", err);
     res.status(500).json({ message: "Server error" });
@@ -83,24 +71,7 @@ export const updateSettings = async (req, res) => {
   try {
     const body = req.body;
     let settings = await Setting.findOne();
-    
-    if (!settings) {
-      // إنشاء إعدادات جديدة إذا لم تكن موجودة
-      const deliveryList = ALGERIAN_WILAYAS.map(state => ({
-        state,
-        officePrice: DEFAULT_OFFICE_PRICE,
-        homePrice: DEFAULT_HOME_PRICE,
-        deliveryDays: 3
-      }));
-
-      settings = await Setting.create({
-        categories: [],
-        sizes: [],
-        colors: [],
-        delivery: deliveryList,
-        orderCalculation: "all"
-      });
-    }
+    if (!settings) settings = new Setting({ categories: [], sizes: [], colors: [] });
 
     // --- إضافة تصنيف ---
     if (body.addCategory) {
@@ -117,8 +88,8 @@ export const updateSettings = async (req, res) => {
       settings.categories.push({
         name,
         slug,
-        imageUrl: image?.url || null,
-        imageId: image?.public_id || null
+        imageUrl: image.url,
+        imageId: image.public_id
       });
     }
 
@@ -141,12 +112,7 @@ export const updateSettings = async (req, res) => {
     // --- إضافة حجم ---
     if (body.addSize) {
       const { name, type } = body.addSize;
-      if (name) {
-        settings.sizes.push({ 
-          name, 
-          type: type || "letter" 
-        });
-      }
+      if (name) settings.sizes.push({ name, type: type || "letter" });
     }
 
     // --- إزالة حجم ---
@@ -169,9 +135,7 @@ export const updateSettings = async (req, res) => {
     // --- إضافة لون ---
     if (body.addColor) {
       const { name, hex } = body.addColor;
-      if (name && hex) {
-        settings.colors.push({ name, hex });
-      }
+      if (name && hex) settings.colors.push({ name, hex });
     }
 
     // --- إزالة لون ---
@@ -207,19 +171,7 @@ export const updateSettings = async (req, res) => {
     }
 
     await settings.save();
-
-    // إرجاع البيانات مع ضمان عدم وجود undefined
-    const responseData = {
-      _id: settings._id,
-      categories: settings.categories || [],
-      sizes: settings.sizes || [],
-      colors: settings.colors || [],
-      delivery: settings.delivery || [],
-      orderCalculation: settings.orderCalculation || "all",
-      message: "Settings updated successfully"
-    };
-
-    res.json(responseData);
+    res.json(settings);
   } catch (err) {
     console.error("updateSettings:", err);
     res.status(500).json({ message: "Server error" });

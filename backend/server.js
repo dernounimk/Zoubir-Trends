@@ -48,41 +48,6 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// ===== Middleware لمعالجة البيانات غير المعرفة =====
-app.use((req, res, next) => {
-  // تغليف res.json لمعالجة البيانات undefined
-  const originalJson = res.json;
-  res.json = function(data) {
-    if (data === undefined || data === null) {
-      return originalJson.call(this, { 
-        success: false, 
-        message: "No data returned",
-        data: null 
-      });
-    }
-    
-    // تنظيف البيانات من undefined values
-    const cleanData = (obj) => {
-      if (Array.isArray(obj)) {
-        return obj.map(item => cleanData(item)).filter(Boolean);
-      } else if (obj && typeof obj === 'object') {
-        const cleaned = {};
-        for (const [key, value] of Object.entries(obj)) {
-          if (value !== undefined && value !== null) {
-            cleaned[key] = cleanData(value);
-          }
-        }
-        return cleaned;
-      }
-      return obj;
-    };
-    
-    const cleanedData = cleanData(data);
-    return originalJson.call(this, cleanedData);
-  };
-  next();
-});
-
 // ===== Routes =====
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);

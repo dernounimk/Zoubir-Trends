@@ -11,7 +11,7 @@ const useSettingStore = create(
       sizesNumbers: [],
       colorsList: [],
       deliverySettings: [],
-      orderCalculation: 'all',
+      orderCalculation: 'confirmed', // ✅ الافتراضي
       loadingMeta: false,
 
       // ────────────────────────────────
@@ -23,36 +23,20 @@ const useSettingStore = create(
           const response = await axios.get('/api/settings');
           const settings = response.data;
 
-          // تأكد من أن البيانات ليست undefined
-          const safeCategories = Array.isArray(settings.categories) ? settings.categories.filter(Boolean) : [];
-          const safeSizes = Array.isArray(settings.sizes) ? settings.sizes.filter(Boolean) : [];
-          const safeColors = Array.isArray(settings.colors) ? settings.colors.filter(Boolean) : [];
-          const safeDelivery = Array.isArray(settings.delivery) ? settings.delivery.filter(Boolean) : [];
-
-          const sizesLetters = safeSizes.filter(s => s && s.type === 'letter');
-          const sizesNumbers = safeSizes.filter(s => s && s.type === 'number');
+          const sizesLetters = (settings.sizes || []).filter(s => s && s.type === 'letter');
+          const sizesNumbers = (settings.sizes || []).filter(s => s && s.type === 'number');
 
           set({
-            categories: safeCategories,
+            categories: (settings.categories || []).filter(Boolean),
             sizesLetters,
             sizesNumbers,
-            colorsList: safeColors,
-            deliverySettings: safeDelivery,
-            orderCalculation: settings.orderCalculation || 'all',
+            colorsList: (settings.colors || []).filter(Boolean),
+            deliverySettings: (settings.delivery || []).filter(Boolean),
+            orderCalculation: settings.orderCalculation || 'confirmed',
           });
         } catch (error) {
           console.error('❌ Failed to fetch metadata:', error);
           toast.error('Failed to load settings');
-          
-          // تعيين قيم افتراضية في حالة الخطأ
-          set({
-            categories: [],
-            sizesLetters: [],
-            sizesNumbers: [],
-            colorsList: [],
-            deliverySettings: [],
-            orderCalculation: 'all'
-          });
         } finally {
           set({ loadingMeta: false });
         }
@@ -66,11 +50,7 @@ const useSettingStore = create(
         try {
           set({ loadingMeta: true });
           const response = await axios.put('/api/settings', { orderCalculation: orderCalc });
-          
-          // تأكد من أن البيانات آمنة
-          const safeOrderCalculation = response.data.orderCalculation || 'all';
-          
-          set({ orderCalculation: safeOrderCalculation });
+          set({ orderCalculation: response.data.orderCalculation });
           toast.success('Order calculation updated');
         } catch (error) {
           console.error('❌ Failed to update order calculation:', error);
@@ -86,14 +66,8 @@ const useSettingStore = create(
       updateDeliverySettings: async (deliverySettings) => {
         try {
           set({ loadingMeta: true });
-          const response = await axios.put('/api/settings', { 
-            delivery: Array.isArray(deliverySettings) ? deliverySettings : [] 
-          });
-          
-          // تأكد من أن البيانات آمنة
-          const safeDelivery = Array.isArray(response.data.delivery) ? response.data.delivery : [];
-          
-          set({ deliverySettings: safeDelivery });
+          const response = await axios.put('/api/settings', { delivery: deliverySettings });
+          set({ deliverySettings: response.data.delivery || [] });
           toast.success('Delivery settings updated');
         } catch (error) {
           console.error('❌ Failed to update delivery settings:', error);
@@ -128,14 +102,9 @@ const useSettingStore = create(
             addCategory: { name, imageUrl: imageBase64 },
           });
 
-          // تأكد من أن البيانات آمنة
-          const safeCategories = Array.isArray(response.data.categories) ? response.data.categories : [];
-          const newCategory = safeCategories.find(c => c && c.name === name);
-          
+          const newCategory = response.data.categories.find(c => c.name === name);
           if (newCategory) {
-            set(state => ({ 
-              categories: [...state.categories, newCategory].filter(Boolean)
-            }));
+            set(state => ({ categories: [...state.categories, newCategory] }));
           }
 
           toast.success('Category added');
@@ -158,7 +127,7 @@ const useSettingStore = create(
           await axios.put('/api/settings', { removeCategoryId: id });
 
           set(state => ({
-            categories: state.categories.filter(c => c && String(c._id) !== String(id)),
+            categories: state.categories.filter(c => String(c._id) !== String(id)),
           }));
 
           toast.success('Category deleted');
@@ -175,11 +144,11 @@ const useSettingStore = create(
       // إنشاء مقاس جديد (أحرف / أرقام)
       // ────────────────────────────────
       createSize: async ({ type, value }) => {
-        const tempId = Date.now().toString();
         try {
           set({ loadingMeta: true });
           if (!value) throw new Error('Value is required');
 
+          const tempId = Date.now().toString();
           const newSizeTemp = {
             _id: tempId,
             name: value,
@@ -189,9 +158,9 @@ const useSettingStore = create(
           // تحديث متفائل (قبل حفظ السيرفر)
           set(state => {
             if (type === 'letters') {
-              return { sizesLetters: [...state.sizesLetters, newSizeTemp].filter(Boolean) };
+              return { sizesLetters: [...state.sizesLetters, newSizeTemp] };
             } else {
-              return { sizesNumbers: [...state.sizesNumbers, newSizeTemp].filter(Boolean) };
+              return { sizesNumbers: [...state.sizesNumbers, newSizeTemp] };
             }
           });
 
@@ -199,23 +168,20 @@ const useSettingStore = create(
             addSize: { name: value, type: newSizeTemp.type },
           });
 
-          // تأكد من أن البيانات آمنة
-          const safeSizes = Array.isArray(response.data.sizes) ? response.data.sizes : [];
-          const newSize = safeSizes.find(s => s && s.name === value);
-          
+          const newSize = response.data.sizes.find(s => s.name === value);
           if (newSize) {
             set(state => {
               if (type === 'letters') {
                 return {
                   sizesLetters: state.sizesLetters.map(s =>
-                    s && s._id === tempId ? newSize : s
-                  ).filter(Boolean),
+                    s._id === tempId ? newSize : s
+                  ),
                 };
               } else {
                 return {
                   sizesNumbers: state.sizesNumbers.map(s =>
-                    s && s._id === tempId ? newSize : s
-                  ).filter(Boolean),
+                    s._id === tempId ? newSize : s
+                  ),
                 };
               }
             });
@@ -227,9 +193,9 @@ const useSettingStore = create(
           // التراجع عن التحديث المؤقت
           set(state => {
             if (type === 'letters') {
-              return { sizesLetters: state.sizesLetters.filter(s => s && s._id !== tempId) };
+              return { sizesLetters: state.sizesLetters.filter(s => s._id !== tempId) };
             } else {
-              return { sizesNumbers: state.sizesNumbers.filter(s => s && s._id !== tempId) };
+              return { sizesNumbers: state.sizesNumbers.filter(s => s._id !== tempId) };
             }
           });
 
@@ -250,8 +216,8 @@ const useSettingStore = create(
           await axios.put('/api/settings', { removeSizeId: id });
 
           set(state => ({
-            sizesLetters: state.sizesLetters.filter(s => s && String(s._id) !== String(id)),
-            sizesNumbers: state.sizesNumbers.filter(s => s && String(s._id) !== String(id)),
+            sizesLetters: state.sizesLetters.filter(s => String(s._id) !== String(id)),
+            sizesNumbers: state.sizesNumbers.filter(s => String(s._id) !== String(id)),
           }));
 
           toast.success('Size deleted');
@@ -276,13 +242,10 @@ const useSettingStore = create(
             addColor: { name, hex },
           });
 
-          // تأكد من أن البيانات آمنة
-          const safeColors = Array.isArray(response.data.colors) ? response.data.colors : [];
-          const newColor = safeColors.find(c => c && c.name === name);
-          
+          const newColor = response.data.colors.find(c => c.name === name);
           if (newColor) {
             set(state => ({
-              colorsList: [...state.colorsList, newColor].filter(Boolean),
+              colorsList: [...state.colorsList, newColor],
             }));
           }
 
@@ -306,7 +269,7 @@ const useSettingStore = create(
           await axios.put('/api/settings', { removeColorId: id });
 
           set(state => ({
-            colorsList: state.colorsList.filter(c => c && String(c._id) !== String(id)),
+            colorsList: state.colorsList.filter(c => String(c._id) !== String(id)),
           }));
 
           toast.success('Color deleted');
@@ -322,12 +285,12 @@ const useSettingStore = create(
     {
       name: 'settings-store',
       partialize: (state) => ({
-        categories: Array.isArray(state.categories) ? state.categories.filter(Boolean) : [],
-        sizesLetters: Array.isArray(state.sizesLetters) ? state.sizesLetters.filter(Boolean) : [],
-        sizesNumbers: Array.isArray(state.sizesNumbers) ? state.sizesNumbers.filter(Boolean) : [],
-        colorsList: Array.isArray(state.colorsList) ? state.colorsList.filter(Boolean) : [],
-        deliverySettings: Array.isArray(state.deliverySettings) ? state.deliverySettings.filter(Boolean) : [],
-        orderCalculation: state.orderCalculation || 'all',
+        categories: state.categories.filter(Boolean),
+        sizesLetters: state.sizesLetters.filter(Boolean),
+        sizesNumbers: state.sizesNumbers.filter(Boolean),
+        colorsList: state.colorsList.filter(Boolean),
+        deliverySettings: state.deliverySettings.filter(Boolean),
+        orderCalculation: state.orderCalculation,
       }),
     }
   )
