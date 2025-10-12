@@ -2,7 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import path from "path";
-import cors from "cors"; // ⬅️ تأكد من استيراد cors
+import cors from "cors";
 
 import authRoutes from "./routes/auth.route.js";
 import productRoutes from "./routes/product.route.js";
@@ -14,32 +14,41 @@ import settingsRoutes from "./routes/settings.route.js";
 import reviewRoutes from "./routes/review.route.js";
 import { connectDB } from "./lib/db.js";
 
-// ⬅️ تحميل environment variables الصحيحة
-if (process.env.NODE_ENV === "production") {
-  dotenv.config({ path: ".env.production" });
-} else {
-  dotenv.config();
-}
-
+dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
+const __dirname = path.resolve();
 
-// ⬅️ إعدادات CORS محدثة
+// ===== إعداد CORS =====
+const allowedOrigins = [
+  "https://zoubir-trends.vercel.app",
+  "http://localhost:5173",
+];
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL,
-    credentials: true, // يسمح بإرسال الكوكيز
+    origin: function (origin, callback) {
+      // السماح للطلبات بدون origin (مثل Postman)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
   })
 );
 
-const __dirname = path.resolve();
+// السماح بطلبات preflight
+app.options("*", cors());
 
+// ===== Middleware =====
 app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 
-// ⬅️ الرواتس
+// ===== Routes =====
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/cart", cartRoutes);
@@ -49,16 +58,18 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/reviews", reviewRoutes);
 
-// ⬅️ خدمة ملفات frontend في production
+// ===== خدمة ملفات الـ frontend في الإنتاج =====
 if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../frontend/dist")));
+  const frontendPath = path.join(__dirname, "../frontend/dist");
+  app.use(express.static(frontendPath));
 
   app.get("*", (req, res) => {
-    res.sendFile(path.resolve(__dirname, "../frontend/dist", "index.html"));
+    res.sendFile(path.resolve(frontendPath, "index.html"));
   });
 }
 
+// ===== تشغيل السيرفر =====
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server is running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+  console.log(`✅ Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
   connectDB();
 });
