@@ -11,27 +11,26 @@ const useSettingStore = create(
       sizesNumbers: [],
       colorsList: [],
       deliverySettings: [],
-      orderCalculation: 'confirmed', // ✅ الافتراضي
+      orderCalculation: 'confirmed',
       loadingMeta: false,
 
-      // ────────────────────────────────
-      // جلب الإعدادات العامة من السيرفر
-      // ────────────────────────────────
       fetchMetaData: async () => {
         try {
           set({ loadingMeta: true });
           const response = await axios.get('/api/settings');
           const settings = response.data;
 
-          const sizesLetters = (settings.sizes || []).filter(s => s && s.type === 'letter');
-          const sizesNumbers = (settings.sizes || []).filter(s => s && s.type === 'number');
+          // تأكد من أن البيانات موجودة
+          const sizes = settings.sizes || [];
+          const sizesLetters = sizes.filter(s => s && s.type === 'letter');
+          const sizesNumbers = sizes.filter(s => s && s.type === 'number');
 
           set({
-            categories: (settings.categories || []).filter(Boolean),
+            categories: settings.categories || [],
             sizesLetters,
             sizesNumbers,
-            colorsList: (settings.colors || []).filter(Boolean),
-            deliverySettings: (settings.delivery || []).filter(Boolean),
+            colorsList: settings.colors || [],
+            deliverySettings: settings.delivery || [],
             orderCalculation: settings.orderCalculation || 'confirmed',
           });
         } catch (error) {
@@ -50,11 +49,16 @@ const useSettingStore = create(
         try {
           set({ loadingMeta: true });
           const response = await axios.put('/api/settings', { orderCalculation: orderCalc });
-          set({ orderCalculation: response.data.orderCalculation });
-          toast.success('Order calculation updated');
+          
+          // تأكد من أن البيانات موجودة في الرد
+          if (response.data && response.data.orderCalculation) {
+            set({ orderCalculation: response.data.orderCalculation });
+            toast.success('Order calculation updated');
+          }
         } catch (error) {
           console.error('❌ Failed to update order calculation:', error);
-          toast.error('Failed to update order calculation');
+          const errorMsg = error.response?.data?.message || 'Failed to update order calculation';
+          toast.error(errorMsg);
         } finally {
           set({ loadingMeta: false });
         }
@@ -285,12 +289,12 @@ const useSettingStore = create(
     {
       name: 'settings-store',
       partialize: (state) => ({
-        categories: state.categories.filter(Boolean),
-        sizesLetters: state.sizesLetters.filter(Boolean),
-        sizesNumbers: state.sizesNumbers.filter(Boolean),
-        colorsList: state.colorsList.filter(Boolean),
-        deliverySettings: state.deliverySettings.filter(Boolean),
-        orderCalculation: state.orderCalculation,
+        categories: state.categories || [],
+        sizesLetters: state.sizesLetters || [],
+        sizesNumbers: state.sizesNumbers || [],
+        colorsList: state.colorsList || [],
+        deliverySettings: state.deliverySettings || [],
+        orderCalculation: state.orderCalculation || 'confirmed',
       }),
     }
   )

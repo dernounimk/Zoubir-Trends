@@ -8,14 +8,19 @@ import cloudinary from "../lib/cloudinary.js";
 const uploadIfBase64 = async (maybeImage, folder = "categories") => {
   if (!maybeImage) return null;
 
-  // إذا كانت الصورة بصيغة base64
-  if (typeof maybeImage === "string" && maybeImage.startsWith("data:image")) {
-    const res = await cloudinary.uploader.upload(maybeImage, { folder });
-    return { url: res.secure_url, public_id: res.public_id };
-  }
+  try {
+    // إذا كانت الصورة بصيغة base64
+    if (typeof maybeImage === "string" && maybeImage.startsWith("data:image")) {
+      const res = await cloudinary.uploader.upload(maybeImage, { folder });
+      return { url: res.secure_url, public_id: res.public_id };
+    }
 
-  // إذا كانت الصورة رابط مباشر
-  return { url: maybeImage, public_id: null };
+    // إذا كانت الصورة رابط مباشر
+    return { url: maybeImage, public_id: null };
+  } catch (error) {
+    console.error("Error uploading image to Cloudinary:", error);
+    return null;
+  }
 };
 
 // قائمة ولايات الجزائر
@@ -60,10 +65,23 @@ export const getSettings = async (req, res) => {
       });
     }
 
-    res.json(settings);
+    // تأكد من أن جميع الحقول موجودة وليست undefined
+    const responseData = {
+      success: true,
+      categories: settings.categories || [],
+      sizes: settings.sizes || [],
+      colors: settings.colors || [],
+      delivery: settings.delivery || [],
+      orderCalculation: settings.orderCalculation || "all"
+    };
+
+    res.json(responseData);
   } catch (err) {
-    console.error("getSettings:", err);
-    res.status(500).json({ message: "Server error" });
+    console.error("getSettings error:", err);
+    res.status(500).json({ 
+      success: false,
+      message: "Server error loading settings" 
+    });
   }
 };
 
@@ -71,25 +89,50 @@ export const updateSettings = async (req, res) => {
   try {
     const body = req.body;
     let settings = await Setting.findOne();
-    if (!settings) settings = new Setting({ categories: [], sizes: [], colors: [] });
+    
+    if (!settings) {
+      // إنشاء إعدادات جديدة إذا لم تكن موجودة
+      const deliveryList = ALGERIAN_WILAYAS.map(state => ({
+        state,
+        officePrice: DEFAULT_OFFICE_PRICE,
+        homePrice: DEFAULT_HOME_PRICE,
+        deliveryDays: 3
+      }));
+
+      settings = await Setting.create({
+        categories: [],
+        sizes: [],
+        colors: [],
+        delivery: deliveryList,
+        orderCalculation: "all"
+      });
+    }
 
     // --- إضافة تصنيف ---
     if (body.addCategory) {
       const { name } = body.addCategory;
-      if (!name) return res.status(400).json({ message: "Category name required" });
+      if (!name) {
+        return res.status(400).json({ 
+          success: false,
+          message: "Category name required" 
+        });
+      }
 
       const image = await uploadIfBase64(body.addCategory.imageUrl || body.addCategory.image);
       const slug = slugify(name, { lower: true, strict: true });
 
       if (settings.categories.some(c => c.slug === slug)) {
-        return res.status(400).json({ message: "Category slug exists" });
+        return res.status(400).json({ 
+          success: false,
+          message: "Category slug exists" 
+        });
       }
 
       settings.categories.push({
         name,
         slug,
-        imageUrl: image.url,
-        imageId: image.public_id
+        imageUrl: image?.url || "",
+        imageId: image?.public_id || null
       });
     }
 
@@ -112,22 +155,31 @@ export const updateSettings = async (req, res) => {
     // --- إضافة حجم ---
     if (body.addSize) {
       const { name, type } = body.addSize;
-      if (name) settings.sizes.push({ name, type: type || "letter" });
+      if (name) {
+        settings.sizes.push({ 
+          name, 
+          type: type || "letter" 
+        });
+      }
     }
 
     // --- إزالة حجم ---
     if (body.removeSizeId) {
       const removedSize = settings.sizes.find(s => String(s._id) === String(body.removeSizeId));
       if (removedSize) {
-        await Product.updateMany(
-          { sizes: removedSize.name },
-          { $pull: { sizes: removedSize.name } }
-        );
-        await Order.updateMany(
-          { "products.selectedSize": removedSize.name },
-          { $set: { "products.$[elem].selectedSize": null } },
-          { arrayFilters: [{ "elem.selectedSize": removedSize.name }] }
-        );
+        try {
+          await Product.updateMany(
+            { sizes: removedSize.name },
+            { $pull: { sizes: removedSize.name } }
+          );
+          await Order.updateMany(
+            { "products.selectedSize": removedSize.name },
+            { $set: { "products.$[elem].selectedSize": null } },
+            { arrayFilters: [{ "elem.selectedSize": removedSize.name }] }
+          );
+        } catch (error) {
+          console.error("Error removing size from products/orders:", error);
+        }
       }
       settings.sizes = settings.sizes.filter(s => String(s._id) !== String(body.removeSizeId));
     }
@@ -135,22 +187,28 @@ export const updateSettings = async (req, res) => {
     // --- إضافة لون ---
     if (body.addColor) {
       const { name, hex } = body.addColor;
-      if (name && hex) settings.colors.push({ name, hex });
+      if (name && hex) {
+        settings.colors.push({ name, hex });
+      }
     }
 
     // --- إزالة لون ---
     if (body.removeColorId) {
       const removedColor = settings.colors.find(c => String(c._id) === String(body.removeColorId));
       if (removedColor) {
-        await Product.updateMany(
-          { colors: removedColor._id },
-          { $pull: { colors: removedColor._id } }
-        );
-        await Order.updateMany(
-          { "products.selectedColor": removedColor._id },
-          { $set: { "products.$[elem].selectedColor": null } },
-          { arrayFilters: [{ "elem.selectedColor": removedColor._id }] }
-        );
+        try {
+          await Product.updateMany(
+            { colors: removedColor.name },
+            { $pull: { colors: removedColor.name } }
+          );
+          await Order.updateMany(
+            { "products.selectedColor": removedColor.name },
+            { $set: { "products.$[elem].selectedColor": null } },
+            { arrayFilters: [{ "elem.selectedColor": removedColor.name }] }
+          );
+        } catch (error) {
+          console.error("Error removing color from products/orders:", error);
+        }
       }
       settings.colors = settings.colors.filter(c => String(c._id) !== String(body.removeColorId));
     }
@@ -163,7 +221,7 @@ export const updateSettings = async (req, res) => {
     // --- إعدادات التوصيل ---
     if (body.delivery && Array.isArray(body.delivery)) {
       settings.delivery = body.delivery.map(item => ({
-        state: item.state,
+        state: item.state || "",
         officePrice: Number(item.officePrice) || 0,
         homePrice: Number(item.homePrice) || 0,
         deliveryDays: Number(item.deliveryDays) || 3
@@ -171,9 +229,23 @@ export const updateSettings = async (req, res) => {
     }
 
     await settings.save();
-    res.json(settings);
+
+    // إرجاع البيانات مع الهيكل الصحيح
+    const responseData = {
+      success: true,
+      categories: settings.categories || [],
+      sizes: settings.sizes || [],
+      colors: settings.colors || [],
+      delivery: settings.delivery || [],
+      orderCalculation: settings.orderCalculation || "all"
+    };
+
+    res.json(responseData);
   } catch (err) {
-    console.error("updateSettings:", err);
-    res.status(500).json({ message: "Server error" });
+    console.error("updateSettings error:", err);
+    res.status(500).json({ 
+      success: false,
+      message: "Server error updating settings" 
+    });
   }
 };
