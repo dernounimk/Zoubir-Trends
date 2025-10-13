@@ -2,7 +2,7 @@ import axios from "axios";
 import { useAdminAuthStore } from "../stores/useAdminAuthStore";
 
 const axiosInstance = axios.create({
-  baseURL: "https://zoubir-trends-backend.onrender.com/api",
+  baseURL: "https://zoubir-trends-backend.onrender.com",
   timeout: 10000,
 });
 
