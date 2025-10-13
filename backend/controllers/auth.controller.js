@@ -2,13 +2,13 @@ import User from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 
-// إعدادات الكوكيز المحسنة
+// backend/controllers/auth.controller.js - الإصلاح
 const getCookieOptions = (maxAge = null) => {
   const options = {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-    path: "/",
+    secure: true, // 🔥 يجب أن يكون true في الإنتاج
+    sameSite: 'none', // 🔥 مهم لـ Firefox و Chrome
+    path: '/',
   };
   
   if (maxAge) options.maxAge = maxAge;

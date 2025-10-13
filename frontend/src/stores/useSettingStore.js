@@ -14,10 +14,11 @@ const useSettingStore = create(
       orderCalculation: 'confirmed',
       loadingMeta: false,
 
-      fetchMetaData: async () => {
-        try {
-          set({ loadingMeta: true });
-          const response = await axios.get('/api/settings');
+        fetchMetaData: async () => {
+          try {
+            set({ loadingMeta: true });
+            const response = await axios.get('/settings'); // 🔥 إزالة /api
+
           const settings = response.data;
 
           // تأكد من أن البيانات موجودة
@@ -48,7 +49,7 @@ const useSettingStore = create(
         if (!['confirmed', 'all'].includes(orderCalc)) return;
         try {
           set({ loadingMeta: true });
-          const response = await axios.put('/api/settings', { orderCalculation: orderCalc });
+          const response = await axios.put('/settings', { orderCalculation: orderCalc }); 
           
           // تأكد من أن البيانات موجودة في الرد
           if (response.data && response.data.orderCalculation) {
