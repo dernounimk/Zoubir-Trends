@@ -4,7 +4,7 @@ import axios from "axios";
 const isProduction = import.meta.env.MODE === "production";
 
 const axiosInstance = axios.create({
-  baseURL: "https://zoubir-trends-backend.onrender.com/api", // 🔥 أضف /api هنا
+  baseURL: "https://zoubir-trends-backend.onrender.com", // 🔥 بدون /api هنا
   withCredentials: true,
   timeout: 10000,
 });
