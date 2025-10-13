@@ -1,6 +1,5 @@
 import express from "express";
 import dotenv from "dotenv";
-import cookieParser from "cookie-parser";
 import path from "path";
 import cors from "cors";
 import mongoose from "mongoose";
@@ -20,36 +19,20 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const __dirname = path.resolve();
 
-// ===== إعداد CORS محسن =====
+// ===== إعداد CORS مبسط =====
 app.use(
   cors({
-    origin: function (origin, callback) {
-      const allowedOrigins = [
-        "https://zoubir-trends.vercel.app",
-        "http://localhost:5173",
-      ];
-      
-      // في الإنتاج، اسمح للنطاقات المحددة
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        console.log("CORS blocked for origin:", origin);
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Cookie"],
+    origin: [
+      "https://zoubir-trends.vercel.app",
+      "http://localhost:5173",
+    ],
+    credentials: false, // 🔥 تغيير إلى false
   })
 );
-
-// معالجة طلبات preflight
-app.options("*", cors());
 
 // ===== Middleware =====
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
-app.use(cookieParser());
 
 // ===== Routes =====
 app.use("/api/auth", authRoutes);
@@ -70,25 +53,6 @@ app.get("/api/health", (req, res) => {
     environment: process.env.NODE_ENV,
     database: mongoose.connection.readyState === 1 ? "Connected" : "Disconnected"
   });
-});
-
-app.get("/api/test", async (req, res) => {
-  try {
-    const Product = (await import("./models/product.model.js")).default;
-    const Setting = (await import("./models/setting.model.js")).default;
-    
-    const productCount = await Product.countDocuments();
-    const setting = await Setting.findOne();
-    
-    res.json({
-      success: true,
-      products: productCount,
-      hasSettings: !!setting,
-      cookies: req.cookies
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
 });
 
 // ===== خدمة الـ frontend =====

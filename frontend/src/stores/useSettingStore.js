@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 
+
 const useSettingStore = create(
   persist(
     (set, get) => ({
@@ -11,30 +12,48 @@ const useSettingStore = create(
       sizesNumbers: [],
       colorsList: [],
       deliverySettings: [],
-      orderCalculation: 'confirmed',
+      orderCalculation: 'all',
       loadingMeta: false,
-
+      
       fetchMetaData: async () => {
         try {
           set({ loadingMeta: true });
           const response = await axios.get('/api/settings');
           const settings = response.data;
 
-          // تأكد من أن البيانات موجودة
-          const sizes = settings.sizes || [];
-          const sizesLetters = sizes.filter(s => s && s.type === 'letter');
-          const sizesNumbers = sizes.filter(s => s && s.type === 'number');
+          if (settings && settings.success) {
+            const sizes = settings.sizes || [];
+            const sizesLetters = sizes.filter(s => s && s.type === 'letter');
+            const sizesNumbers = sizes.filter(s => s && s.type === 'number');
 
-          set({
-            categories: settings.categories || [],
-            sizesLetters,
-            sizesNumbers,
-            colorsList: settings.colors || [],
-            deliverySettings: settings.delivery || [],
-            orderCalculation: settings.orderCalculation || 'confirmed',
-          });
+            set({
+              categories: settings.categories || [],
+              sizesLetters,
+              sizesNumbers,
+              colorsList: settings.colors || [],
+              deliverySettings: settings.delivery || [],
+              orderCalculation: settings.orderCalculation || 'all',
+            });
+          } else {
+            set({
+              categories: [],
+              sizesLetters: [],
+              sizesNumbers: [],
+              colorsList: [],
+              deliverySettings: [],
+              orderCalculation: 'all',
+            });
+          }
         } catch (error) {
           console.error('❌ Failed to fetch metadata:', error);
+          set({
+            categories: [],
+            sizesLetters: [],
+            sizesNumbers: [],
+            colorsList: [],
+            deliverySettings: [],
+            orderCalculation: 'all',
+          });
           toast.error('Failed to load settings');
         } finally {
           set({ loadingMeta: false });
@@ -50,7 +69,6 @@ const useSettingStore = create(
           set({ loadingMeta: true });
           const response = await axios.put('/api/settings', { orderCalculation: orderCalc });
           
-          // تأكد من أن البيانات موجودة في الرد
           if (response.data && response.data.orderCalculation) {
             set({ orderCalculation: response.data.orderCalculation });
             toast.success('Order calculation updated');
@@ -294,7 +312,7 @@ const useSettingStore = create(
         sizesNumbers: state.sizesNumbers || [],
         colorsList: state.colorsList || [],
         deliverySettings: state.deliverySettings || [],
-        orderCalculation: state.orderCalculation || 'confirmed',
+        orderCalculation: state.orderCalculation || 'all',
       }),
     }
   )

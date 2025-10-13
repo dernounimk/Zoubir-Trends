@@ -1,21 +1,41 @@
-// frontend/src/lib/axios.js
 import axios from "axios";
-
-const isProduction = import.meta.env.MODE === "production";
+import { useAdminAuthStore } from "../stores/useAdminAuthStore";
 
 const axiosInstance = axios.create({
-  baseURL: isProduction
-    ? "https://zoubir-trends-backend.onrender.com"  // 🔥 إزالة /api من هنا
-    : "http://localhost:5000",                      // 🔥 إزالة /api من هنا
-  withCredentials: true,
+  baseURL: "https://zoubir-trends-backend.onrender.com/api",
   timeout: 10000,
 });
 
-// إضافة interceptor لمعالجة الأخطاء
+// 🔥 interceptor لإضافة التوكن تلقائياً
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const { accessToken } = useAdminAuthStore.getState();
+    if (accessToken) {
+      config.headers.Authorization = `Bearer ${accessToken}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// 🔥 interceptor لتجديد التوكن عند انتهاء الصلاحية
 axiosInstance.interceptors.response.use(
   (response) => response,
-  (error) => {
-    console.error("API Error:", error.response?.data || error.message);
+  async (error) => {
+    const originalRequest = error.config;
+    
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      
+      try {
+        await useAdminAuthStore.getState().refreshToken();
+        return axiosInstance(originalRequest);
+      } catch (refreshError) {
+        useAdminAuthStore.getState().logout();
+        return Promise.reject(refreshError);
+      }
+    }
+    
     return Promise.reject(error);
   }
 );

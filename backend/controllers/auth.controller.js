@@ -2,19 +2,6 @@ import User from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 
-// إعدادات الكوكيز المحسنة
-const getCookieOptions = (maxAge = null) => {
-  const options = {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-    path: "/",
-  };
-  
-  if (maxAge) options.maxAge = maxAge;
-  return options;
-};
-
 const generateAccessToken = (userId) => {
   return jwt.sign({ userId }, process.env.ACCESS_TOKEN_SECRET, {
     expiresIn: "15m",
@@ -62,13 +49,12 @@ export const login = async (req, res) => {
       { $set: { refreshToken } }
     );
 
-    // إرسال الكوكيز
-    res.cookie("accessToken", accessToken, getCookieOptions(15 * 60 * 1000));
-    res.cookie("refreshToken", refreshToken, getCookieOptions(7 * 24 * 60 * 60 * 1000));
-
+    // 🔥 إرجاع التوكنات في الـ response بدلاً من الكوكيز
     return res.json({
       success: true,
       message: "Login successful",
+      accessToken,
+      refreshToken,
       user: {
         id: user._id,
         name: user.name,
@@ -87,18 +73,16 @@ export const login = async (req, res) => {
 
 export const logout = async (req, res) => {
   try {
-    const token = req.cookies.refreshToken;
-    if (token) {
+    const { refreshToken } = req.body;
+    
+    if (refreshToken) {
       try {
-        const decoded = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET);
+        const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
         await User.findByIdAndUpdate(decoded.userId, { refreshToken: null });
       } catch (error) {
         console.log("Error clearing refresh token:", error.message);
       }
     }
-
-    res.clearCookie("accessToken", getCookieOptions());
-    res.clearCookie("refreshToken", getCookieOptions());
 
     return res.json({ 
       success: true,
@@ -115,18 +99,19 @@ export const logout = async (req, res) => {
 
 export const refreshToken = async (req, res) => {
   try {
-    const token = req.cookies.refreshToken;
-    if (!token) {
+    const { refreshToken } = req.body;
+    
+    if (!refreshToken) {
       return res.status(401).json({ 
         success: false,
         message: "No refresh token provided" 
       });
     }
 
-    const decoded = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET);
+    const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
     const user = await User.findById(decoded.userId);
     
-    if (!user || user.refreshToken !== token) {
+    if (!user || user.refreshToken !== refreshToken) {
       return res.status(403).json({ 
         success: false,
         message: "Invalid refresh token" 
@@ -135,11 +120,10 @@ export const refreshToken = async (req, res) => {
 
     const newAccessToken = generateAccessToken(user._id);
 
-    res.cookie("accessToken", newAccessToken, getCookieOptions(15 * 60 * 1000));
-
     return res.json({ 
       success: true,
-      message: "Token refreshed" 
+      message: "Token refreshed",
+      accessToken: newAccessToken
     });
   } catch (error) {
     console.error("Refresh token error:", error);
