@@ -43,12 +43,13 @@ const ALGERIAN_WILAYAS = [
 const DEFAULT_HOME_PRICE = 600;   // التوصيل للمنزل
 const DEFAULT_OFFICE_PRICE = 400; // التوصيل للمكتب
 
+// backend/controllers/settings.controller.js
 export const getSettings = async (req, res) => {
   try {
     let settings = await Setting.findOne();
 
-    // إذا لم تكن الإعدادات موجودة، ننشئها تلقائيًا
     if (!settings) {
+      // إنشاء إعدادات افتراضية
       const deliveryList = ALGERIAN_WILAYAS.map(state => ({
         state,
         officePrice: DEFAULT_OFFICE_PRICE,
@@ -65,22 +66,25 @@ export const getSettings = async (req, res) => {
       });
     }
 
-    // تأكد من أن جميع الحقول موجودة وليست undefined
-    const responseData = {
+    // 🔥 تأكد من أن جميع الحقول موجودة
+    res.json({
       success: true,
       categories: settings.categories || [],
       sizes: settings.sizes || [],
       colors: settings.colors || [],
       delivery: settings.delivery || [],
       orderCalculation: settings.orderCalculation || "all"
-    };
-
-    res.json(responseData);
+    });
   } catch (err) {
     console.error("getSettings error:", err);
     res.status(500).json({ 
       success: false,
-      message: "Server error loading settings" 
+      message: "Server error loading settings",
+      categories: [], // 🔥 ارجع مصفوفات فارغة بدلاً من undefined
+      sizes: [],
+      colors: [],
+      delivery: [],
+      orderCalculation: "all"
     });
   }
 };

@@ -14,33 +14,54 @@ const useSettingStore = create(
       orderCalculation: 'confirmed',
       loadingMeta: false,
 
-        fetchMetaData: async () => {
-          try {
-            set({ loadingMeta: true });
-            const response = await axios.get('/settings'); // 🔥 إزالة /api
+// frontend/src/stores/useSettingStore.js
+fetchMetaData: async () => {
+  try {
+    set({ loadingMeta: true });
+    const response = await axios.get('/api/settings');
+    const settings = response.data;
 
-          const settings = response.data;
+    // 🔥 تحقق من وجود البيانات في الـ response
+    if (settings && settings.success) {
+      const sizes = settings.sizes || [];
+      const sizesLetters = sizes.filter(s => s && s.type === 'letter');
+      const sizesNumbers = sizes.filter(s => s && s.type === 'number');
 
-          // تأكد من أن البيانات موجودة
-          const sizes = settings.sizes || [];
-          const sizesLetters = sizes.filter(s => s && s.type === 'letter');
-          const sizesNumbers = sizes.filter(s => s && s.type === 'number');
-
-          set({
-            categories: settings.categories || [],
-            sizesLetters,
-            sizesNumbers,
-            colorsList: settings.colors || [],
-            deliverySettings: settings.delivery || [],
-            orderCalculation: settings.orderCalculation || 'confirmed',
-          });
-        } catch (error) {
-          console.error('❌ Failed to fetch metadata:', error);
-          toast.error('Failed to load settings');
-        } finally {
-          set({ loadingMeta: false });
-        }
-      },
+      set({
+        categories: settings.categories || [],
+        sizesLetters,
+        sizesNumbers,
+        colorsList: settings.colors || [],
+        deliverySettings: settings.delivery || [],
+        orderCalculation: settings.orderCalculation || 'all',
+      });
+    } else {
+      // 🔥 إذا فشل الـ request، استخدم القيم الافتراضية
+      set({
+        categories: [],
+        sizesLetters: [],
+        sizesNumbers: [],
+        colorsList: [],
+        deliverySettings: [],
+        orderCalculation: 'all',
+      });
+    }
+  } catch (error) {
+    console.error('❌ Failed to fetch metadata:', error);
+    // 🔥 في حالة الخطأ، استخدم القيم الافتراضية
+    set({
+      categories: [],
+      sizesLetters: [],
+      sizesNumbers: [],
+      colorsList: [],
+      deliverySettings: [],
+      orderCalculation: 'all',
+    });
+    toast.error('Failed to load settings');
+  } finally {
+    set({ loadingMeta: false });
+  }
+},
 
       // ────────────────────────────────
       // تحديث طريقة حساب الطلبات

@@ -2,13 +2,13 @@ import User from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 
-// backend/controllers/auth.controller.js - الإصلاح
 const getCookieOptions = (maxAge = null) => {
   const options = {
     httpOnly: true,
     secure: true, // 🔥 يجب أن يكون true في الإنتاج
-    sameSite: 'none', // 🔥 مهم لـ Firefox و Chrome
+    sameSite: 'none', // 🔥 مهم لجميع المتصفحات
     path: '/',
+    domain: '.onrender.com' // 🔥 أضف هذا السطر
   };
   
   if (maxAge) options.maxAge = maxAge;
