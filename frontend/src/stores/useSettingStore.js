@@ -15,28 +15,29 @@ const useSettingStore = create(
       orderCalculation: 'all',
       loadingMeta: false,
 
-        fetchMetaData: async () => {
+fetchMetaData: async () => {
         try {
           set({ loadingMeta: true });
-          const response = await axios.get('/api/settings');
-          const settings = response.data;
-
-          // 🔥 تحقق من وجود البيانات بشكل آمن
-          const safeSizes = Array.isArray(settings?.sizes) ? settings.sizes : [];
-          const sizesLetters = safeSizes.filter(s => s && s.type === 'letter');
-          const sizesNumbers = safeSizes.filter(s => s && s.type === 'number');
+          const response = await axios.get('/settings');
+          
+          // 🔥 تحقق من وجود البيانات بشكل آمن جداً
+          const data = response.data || {};
+          
+          const safeSizes = Array.isArray(data.sizes) ? data.sizes : [];
+          const sizesLetters = safeSizes.filter(s => s && s.type === 'letter') || [];
+          const sizesNumbers = safeSizes.filter(s => s && s.type === 'number') || [];
 
           set({
-            categories: Array.isArray(settings?.categories) ? settings.categories : [],
+            categories: Array.isArray(data.categories) ? data.categories : [],
             sizesLetters,
             sizesNumbers,
-            colorsList: Array.isArray(settings?.colors) ? settings.colors : [],
-            deliverySettings: Array.isArray(settings?.delivery) ? settings.delivery : [],
-            orderCalculation: settings?.orderCalculation || 'all',
+            colorsList: Array.isArray(data.colors) ? data.colors : [],
+            deliverySettings: Array.isArray(data.delivery) ? data.delivery : [],
+            orderCalculation: data.orderCalculation || 'all',
           });
         } catch (error) {
           console.error('❌ Failed to fetch metadata:', error);
-          // 🔥 استخدم القيم الافتراضية في حالة الخطأ
+          // بيانات افتراضية آمنة
           set({
             categories: [],
             sizesLetters: [],
@@ -45,7 +46,6 @@ const useSettingStore = create(
             deliverySettings: [],
             orderCalculation: 'all',
           });
-          toast.error('Failed to load settings');
         } finally {
           set({ loadingMeta: false });
         }

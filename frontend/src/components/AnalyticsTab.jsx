@@ -58,18 +58,16 @@ export const AnalyticsTab = () => {
     fetchAnalyticsData();
   }, []);
 
-  useEffect(() => {
+  // في AnalyticsTab.js - أصلح useEffect
+useEffect(() => {
   const fetchAnalyticsData = async () => {
     try {
-      const response = await axios.get("/api/analytics");
+      // 🔥 استخدم route صحيح
+      const response = await axios.get("/analytics");
       
-      // 🔥 تحقق من وجود البيانات
-      if (response.data && response.data.analyticsData) {
-        setAnalyticsData(response.data.analyticsData);
-        setDailyOrdersData(response.data.dailySalesData || []);
-      } else {
-        // استخدم بيانات افتراضية
-        setAnalyticsData({
+      // بيانات افتراضية في حالة الخطأ
+      const defaultData = {
+        analyticsData: {
           products: { total: 0, featured: 0, regular: 0 },
           orders: { total: 0, confirmed: 0, pending: 0 },
           coupons: { total: 0, active: 0, inactive: 0 },
@@ -80,12 +78,17 @@ export const AnalyticsTab = () => {
             netWithDelivery: 0,
             netWithoutDelivery: 0
           }
-        });
-        setDailyOrdersData([]);
-      }
+        },
+        dailySalesData: []
+      };
+
+      const data = response.data || defaultData;
+      
+      setAnalyticsData(data.analyticsData || defaultData.analyticsData);
+      setDailyOrdersData(Array.isArray(data.dailySalesData) ? data.dailySalesData : []);
     } catch (error) {
       console.error("Error fetching analytics data:", error);
-      // بيانات افتراضية في حالة الخطأ
+      // استخدم البيانات الافتراضية
       setAnalyticsData({
         products: { total: 0, featured: 0, regular: 0 },
         orders: { total: 0, confirmed: 0, pending: 0 },
