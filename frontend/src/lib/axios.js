@@ -1,4 +1,3 @@
-// frontend/src/lib/axios.js
 import axios from "axios";
 import { useAdminAuthStore } from "../stores/useAdminAuthStore";
 
@@ -10,7 +9,7 @@ const axiosInstance = axios.create({
 // 🔥 إصلاح تلقائي لجميع الـ routes
 axiosInstance.interceptors.request.use(
   (config) => {
-    // أضف /api تلقائياً لجميع الـ routes ما عدا health
+    // أضف /api تلقائياً لجميع الـ routes ما عدا الاستثناءات
     if (config.url && 
         !config.url.startsWith('/api/') && 
         !config.url.startsWith('/auth/') && 

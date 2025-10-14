@@ -17,13 +17,14 @@ const useSettingStore = create(
       fetchMetaData: async () => {
         try {
           set({ loadingMeta: true });
-          const response = await axios.get('/api/settings');
           
-          // 🔥 تحقق بشكل متعمق من كل مستوى من البيانات
+          // 🔥 استخدم '/settings' بدون /api (سيضيفها axios تلقائياً)
+          const response = await axios.get('/settings');
+          
           const data = response?.data || {};
-          console.log('📦 Settings API Response:', data); // للتصحيح
-          
-          // 🔥 تحقق آمن من كل حقل
+          console.log('📦 Settings API Response:', data);
+
+          // 🔥 تحقق بشكل آمن من كل حقل
           const safeCategories = Array.isArray(data.categories) ? data.categories : [];
           const safeSizes = Array.isArray(data.sizes) ? data.sizes : [];
           const safeColors = Array.isArray(data.colors) ? data.colors : [];
@@ -75,14 +76,12 @@ const useSettingStore = create(
         }
       },
 
-      // ────────────────────────────────
-      // تحديث طريقة حساب الطلبات
-      // ────────────────────────────────
       updateOrderCalculation: async (orderCalc) => {
         if (!['confirmed', 'all'].includes(orderCalc)) return;
         try {
           set({ loadingMeta: true });
-          const response = await axios.put('/api/settings', { orderCalculation: orderCalc });
+          // 🔥 استخدم '/settings' بدون /api
+          const response = await axios.put('/settings', { orderCalculation: orderCalc });
           
           const data = response?.data || {};
           if (data.orderCalculation) {
@@ -98,13 +97,11 @@ const useSettingStore = create(
         }
       },
 
-      // ────────────────────────────────
-      // تحديث إعدادات التوصيل
-      // ────────────────────────────────
       updateDeliverySettings: async (deliverySettings) => {
         try {
           set({ loadingMeta: true });
-          const response = await axios.put('/api/settings', { 
+          // 🔥 استخدم '/settings' بدون /api
+          const response = await axios.put('/settings', { 
             delivery: Array.isArray(deliverySettings) ? deliverySettings : [] 
           });
           
@@ -121,9 +118,6 @@ const useSettingStore = create(
         }
       },
 
-      // ────────────────────────────────
-      // إنشاء تصنيف جديد
-      // ────────────────────────────────
       createCategory: async ({ name, image }) => {
         try {
           set({ loadingMeta: true });
@@ -141,7 +135,8 @@ const useSettingStore = create(
             imageBase64 = image || '';
           }
 
-          const response = await axios.put('/api/settings', {
+          // 🔥 استخدم '/settings' بدون /api
+          const response = await axios.put('/settings', {
             addCategory: { name, imageUrl: imageBase64 },
           });
 
@@ -167,13 +162,11 @@ const useSettingStore = create(
         }
       },
 
-      // ────────────────────────────────
-      // حذف تصنيف
-      // ────────────────────────────────
       deleteCategory: async (id) => {
         try {
           set({ loadingMeta: true });
-          await axios.put('/api/settings', { removeCategoryId: id });
+          // 🔥 استخدم '/settings' بدون /api
+          await axios.put('/settings', { removeCategoryId: id });
 
           set(state => ({
             categories: (state.categories || []).filter(c => 
@@ -191,9 +184,6 @@ const useSettingStore = create(
         }
       },
 
-      // ────────────────────────────────
-      // إنشاء مقاس جديد
-      // ────────────────────────────────
       createSize: async ({ type, value }) => {
         try {
           set({ loadingMeta: true });
@@ -219,7 +209,8 @@ const useSettingStore = create(
             }
           });
 
-          const response = await axios.put('/api/settings', {
+          // 🔥 استخدم '/settings' بدون /api
+          const response = await axios.put('/settings', {
             addSize: { name: value, type: newSizeTemp.type },
           });
 
@@ -270,13 +261,11 @@ const useSettingStore = create(
         }
       },
 
-      // ────────────────────────────────
-      // حذف مقاس
-      // ────────────────────────────────
       deleteSize: async (id) => {
         try {
           set({ loadingMeta: true });
-          await axios.put('/api/settings', { removeSizeId: id });
+          // 🔥 استخدم '/settings' بدون /api
+          await axios.put('/settings', { removeSizeId: id });
 
           set(state => ({
             sizesLetters: (state.sizesLetters || []).filter(s => 
@@ -297,15 +286,13 @@ const useSettingStore = create(
         }
       },
 
-      // ────────────────────────────────
-      // إنشاء لون جديد
-      // ────────────────────────────────
       createColor: async ({ name, hex }) => {
         try {
           set({ loadingMeta: true });
           if (!name || !hex) throw new Error('Name and hex are required');
 
-          const response = await axios.put('/api/settings', {
+          // 🔥 استخدم '/settings' بدون /api
+          const response = await axios.put('/settings', {
             addColor: { name, hex },
           });
 
@@ -331,13 +318,11 @@ const useSettingStore = create(
         }
       },
 
-      // ────────────────────────────────
-      // حذف لون
-      // ────────────────────────────────
       deleteColor: async (id) => {
         try {
           set({ loadingMeta: true });
-          await axios.put('/api/settings', { removeColorId: id });
+          // 🔥 استخدم '/settings' بدون /api
+          await axios.put('/settings', { removeColorId: id });
 
           set(state => ({
             colorsList: (state.colorsList || []).filter(c => 

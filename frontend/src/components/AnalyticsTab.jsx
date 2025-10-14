@@ -3,18 +3,8 @@ import { useEffect, useState } from "react";
 import axios from "../lib/axios";
 import { createPortal } from "react-dom";
 import { 
-  Package, 
-  ShoppingCart, 
-  Star,
-  CheckCircle,
-  Clock,
-  Ticket,
-  Zap,
-  ZapOff,
-  TrendingUp,
-  TicketPercent,
-  List,
-  X
+  Package, ShoppingCart, Star, CheckCircle, Clock, Ticket,
+  Zap, ZapOff, TrendingUp, TicketPercent, List, X
 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import LoadingSpinner from "./LoadingSpinner";
@@ -41,33 +31,39 @@ export const AnalyticsTab = () => {
   const [selectedRange, setSelectedRange] = useState(30);
   const [selectedDate, setSelectedDate] = useState("");
 
-  const formatNumber = (value) => value.toLocaleString("en-US");
+  const formatNumber = (value) => value?.toLocaleString("en-US") || "0";
 
   useEffect(() => {
     const fetchAnalyticsData = async () => {
       try {
+        // 🔥 استخدم '/analytics' بدون /api
         const response = await axios.get("/analytics");
-        setAnalyticsData(response.data.analyticsData);
-        setDailyOrdersData(response.data.dailySalesData);
+        
+        // بيانات افتراضية في حالة الخطأ
+        const defaultData = {
+          analyticsData: {
+            products: { total: 0, featured: 0, regular: 0 },
+            orders: { total: 0, confirmed: 0, pending: 0 },
+            coupons: { total: 0, active: 0, inactive: 0 },
+            revenue: { 
+              withDelivery: 0, 
+              withoutDelivery: 0,
+              totalDiscounts: 0,
+              netWithDelivery: 0,
+              netWithoutDelivery: 0
+            }
+          },
+          dailySalesData: []
+        };
+
+        const data = response.data || defaultData;
+        
+        setAnalyticsData(data.analyticsData || defaultData.analyticsData);
+        setDailyOrdersData(Array.isArray(data.dailySalesData) ? data.dailySalesData : []);
       } catch (error) {
         console.error("Error fetching analytics data:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchAnalyticsData();
-  }, []);
-
-  // في AnalyticsTab.js - أصلح useEffect
-useEffect(() => {
-  const fetchAnalyticsData = async () => {
-    try {
-      // 🔥 استخدم route صحيح
-      const response = await axios.get("/analytics");
-      
-      // بيانات افتراضية في حالة الخطأ
-      const defaultData = {
-        analyticsData: {
+        // استخدم البيانات الافتراضية
+        setAnalyticsData({
           products: { total: 0, featured: 0, regular: 0 },
           orders: { total: 0, confirmed: 0, pending: 0 },
           coupons: { total: 0, active: 0, inactive: 0 },
@@ -78,38 +74,17 @@ useEffect(() => {
             netWithDelivery: 0,
             netWithoutDelivery: 0
           }
-        },
-        dailySalesData: []
-      };
-
-      const data = response.data || defaultData;
-      
-      setAnalyticsData(data.analyticsData || defaultData.analyticsData);
-      setDailyOrdersData(Array.isArray(data.dailySalesData) ? data.dailySalesData : []);
-    } catch (error) {
-      console.error("Error fetching analytics data:", error);
-      // استخدم البيانات الافتراضية
-      setAnalyticsData({
-        products: { total: 0, featured: 0, regular: 0 },
-        orders: { total: 0, confirmed: 0, pending: 0 },
-        coupons: { total: 0, active: 0, inactive: 0 },
-        revenue: { 
-          withDelivery: 0, 
-          withoutDelivery: 0,
-          totalDiscounts: 0,
-          netWithDelivery: 0,
-          netWithoutDelivery: 0
-        }
-      });
-      setDailyOrdersData([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  fetchAnalyticsData();
-}, []);
+        });
+        setDailyOrdersData([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchAnalyticsData();
+  }, []);
 
   if (isLoading) return <LoadingSpinner />;
+
 
   // ✅ إنشاء بيانات آخر N أيام دائمًا
   const generateLastDaysData = (daysCount = 30) => {
