@@ -20,15 +20,13 @@ const PORT = process.env.PORT || 5000;
 const __dirname = path.resolve();
 
 // ===== إعداد CORS مبسط =====
-app.use(
-  cors({
-    origin: [
-      "https://zoubir-trends.vercel.app",
-      "http://localhost:5173",
-    ],
-    credentials: false, // 🔥 تغيير إلى false
-  })
-);
+app.use(cors({
+  origin: [
+    "https://zoubir-trends.vercel.app",
+    "http://localhost:5173",
+  ],
+  credentials: false,
+}));
 
 // ===== Middleware =====
 app.use(express.json({ limit: "50mb" }));
@@ -58,7 +56,6 @@ app.get("/api/health", (req, res) => {
 // ===== خدمة الـ frontend =====
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "../frontend/dist")));
-
   app.get("*", (req, res) => {
     res.sendFile(path.resolve(__dirname, "../frontend/dist/index.html"));
   });
@@ -69,13 +66,12 @@ app.use((err, req, res, next) => {
   console.error("Global error handler:", err);
   res.status(500).json({ 
     success: false,
-    message: "Internal server error",
-    error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    message: "Internal server error"
   });
 });
 
 // ===== تشغيل السيرفر =====
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`✅ Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+  console.log(`✅ Server running on port ${PORT}`);
   connectDB();
 });

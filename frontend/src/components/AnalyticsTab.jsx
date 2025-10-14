@@ -58,6 +58,54 @@ export const AnalyticsTab = () => {
     fetchAnalyticsData();
   }, []);
 
+  useEffect(() => {
+  const fetchAnalyticsData = async () => {
+    try {
+      const response = await axios.get("/api/analytics");
+      
+      // 🔥 تحقق من وجود البيانات
+      if (response.data && response.data.analyticsData) {
+        setAnalyticsData(response.data.analyticsData);
+        setDailyOrdersData(response.data.dailySalesData || []);
+      } else {
+        // استخدم بيانات افتراضية
+        setAnalyticsData({
+          products: { total: 0, featured: 0, regular: 0 },
+          orders: { total: 0, confirmed: 0, pending: 0 },
+          coupons: { total: 0, active: 0, inactive: 0 },
+          revenue: { 
+            withDelivery: 0, 
+            withoutDelivery: 0,
+            totalDiscounts: 0,
+            netWithDelivery: 0,
+            netWithoutDelivery: 0
+          }
+        });
+        setDailyOrdersData([]);
+      }
+    } catch (error) {
+      console.error("Error fetching analytics data:", error);
+      // بيانات افتراضية في حالة الخطأ
+      setAnalyticsData({
+        products: { total: 0, featured: 0, regular: 0 },
+        orders: { total: 0, confirmed: 0, pending: 0 },
+        coupons: { total: 0, active: 0, inactive: 0 },
+        revenue: { 
+          withDelivery: 0, 
+          withoutDelivery: 0,
+          totalDiscounts: 0,
+          netWithDelivery: 0,
+          netWithoutDelivery: 0
+        }
+      });
+      setDailyOrdersData([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  fetchAnalyticsData();
+}, []);
+
   if (isLoading) return <LoadingSpinner />;
 
   // ✅ إنشاء بيانات آخر N أيام دائمًا

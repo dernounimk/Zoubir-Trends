@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import toast from "react-hot-toast";
 import axios from "../lib/axios";
+
 export const useProductStore = create((set, get) => ({
   products: [],
   featuredProducts: [],
@@ -60,7 +61,6 @@ export const useProductStore = create((set, get) => ({
             ? {
                 ...p,
                 numReviews: Math.max(0, p.numReviews - 1),
-                // إعادة حساب التقييم يحتاج fetch جديد
               }
             : p
         ),
@@ -119,103 +119,106 @@ export const useProductStore = create((set, get) => ({
     }
   },
 
-	fetchProductsByCategory: async (category) => {
-		set({ loading: true });
-		try {
-			const response = await axios.get(`/products/category/${category}`);
-			set({ products: response.data.products, loading: false });
-		} catch (error) {
-			set({ loading: false });
-			toast.error(error.response?.data?.error || "Failed to fetch products");
-		}
-	},
+  // 🔥 أصلح الـ routes الناقصة
+  fetchProductsByCategory: async (category) => {
+    set({ loading: true });
+    try {
+      const response = await axios.get(`/api/products/category/${category}`);
+      set({ products: response.data.products || [], loading: false });
+    } catch (error) {
+      set({ loading: false });
+      toast.error("Failed to fetch products by category");
+    }
+  },
 
-// تأكد من أن دالة fetchProductById تعيد المنتج مع الألوان كمصفوفة IDs
-	fetchProductById: async (productId) => {
-	set({ loading: true });
-	try {
-		const response = await axios.get(`/products/${productId}`);
-		set({ 
-		products: [response.data], 
-		loading: false 
-		});
-		return response.data; // يجب أن تكون colors هنا كمصفوفة من IDs
-	} catch (error) {
-		set({ loading: false });
-		toast.error(error.response?.data?.error || "Failed to fetch product");
-		return null;
-	}
-	},
+  fetchProductById: async (productId) => {
+    set({ loading: true });
+    try {
+      const response = await axios.get(`/api/products/${productId}`);
+      set({ 
+        products: [response.data], 
+        loading: false 
+      });
+      return response.data;
+    } catch (error) {
+      set({ loading: false });
+      toast.error("Failed to fetch product");
+      return null;
+    }
+  },
 
-	deleteProduct: async (productId) => {
-		set({ loading: true });
-		try {
-			await axios.delete(`/products/${productId}`);
-			set((prevProducts) => ({
-				products: prevProducts.products.filter((product) => product._id !== productId),
-				loading: false,
-			}));
-		} catch (error) {
-			set({ loading: false });
-			toast.error(error.response?.data?.error || "Failed to delete product");
-		}
-	},
+  deleteProduct: async (productId) => {
+    set({ loading: true });
+    try {
+      await axios.delete(`/api/products/${productId}`);
+      set((state) => ({
+        products: state.products.filter((product) => product._id !== productId),
+        loading: false,
+      }));
+      toast.success("Product deleted successfully");
+    } catch (error) {
+      set({ loading: false });
+      toast.error("Failed to delete product");
+    }
+  },
 
-	toggleFeaturedProduct: async (productId) => {
-		set({ loading: true });
-		try {
-			const response = await axios.patch(`/products/${productId}`);
-			set((prevProducts) => ({
-				products: prevProducts.products.map((product) =>
-					product._id === productId
-						? { ...product, isFeatured: response.data.isFeatured }
-						: product
-				),
-				loading: false,
-			}));
-		} catch (error) {
-			set({ loading: false });
-			toast.error(error.response?.data?.error || "Failed to update product");
-		}
-	},
+  toggleFeaturedProduct: async (productId) => {
+    set({ loading: true });
+    try {
+      const response = await axios.patch(`/api/products/${productId}/toggle-featured`);
+      set((state) => ({
+        products: state.products.map((product) =>
+          product._id === productId
+            ? { ...product, isFeatured: response.data.isFeatured }
+            : product
+        ),
+        loading: false,
+      }));
+      toast.success("Product featured status updated");
+    } catch (error) {
+      set({ loading: false });
+      toast.error("Failed to update product");
+    }
+  },
 
-	fetchFeaturedProducts: async () => {
-	set({ loading: true });
-	try {
-		const response = await axios.get("/products/featured");
-		set({ 
-		featuredProducts: response.data,
-		loading: false 
-		});
-	} catch (error) {
-		set({ loading: false });
-	}
-	},
+  fetchFeaturedProducts: async () => {
+    set({ loading: true });
+    try {
+      const response = await axios.get("/api/products/featured");
+      set({ 
+        featuredProducts: response.data || [],
+        loading: false 
+      });
+    } catch (error) {
+      set({ loading: false });
+      toast.error("Failed to fetch featured products");
+    }
+  },
 
-	updateProduct: async (productId, updatedData) => {
-	set({ loading: true });
-	try {
-		const payload = { ...updatedData };
+  updateProduct: async (productId, updatedData) => {
+    set({ loading: true });
+    try {
+      const payload = { ...updatedData };
 
-		// بدل حذف الحقل، اتركه null كما هو
-		if (payload.priceAfterDiscount === "") {
-		payload.priceAfterDiscount = null;
-		}
-		if (payload.priceBeforeDiscount === "") {
-		payload.priceBeforeDiscount = null;
-		}
+      if (payload.priceAfterDiscount === "") {
+        payload.priceAfterDiscount = null;
+      }
+      if (payload.priceBeforeDiscount === "") {
+        payload.priceBeforeDiscount = null;
+      }
 
-		const res = await axios.put(`/products/${productId}`, payload);
+      const res = await axios.put(`/api/products/${productId}`, payload);
 
-		set((prev) => ({
-		products: prev.products.map((p) =>
-			p._id === productId ? res.data : p
-		),
-		loading: false,
-		}));
-	} catch (error) {
-		toast.error(error.response?.data?.error || "فشل تحديث المنتج");
-		set({ loading: false });
-	}
-	},
+      set((state) => ({
+        products: state.products.map((p) =>
+          p._id === productId ? res.data : p
+        ),
+        loading: false,
+      }));
+      toast.success("Product updated successfully");
+    } catch (error) {
+      toast.error("Failed to update product");
+      set({ loading: false });
+    }
+  },
 }));

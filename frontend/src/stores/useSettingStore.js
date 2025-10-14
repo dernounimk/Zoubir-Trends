@@ -14,38 +14,29 @@ const useSettingStore = create(
       deliverySettings: [],
       orderCalculation: 'all',
       loadingMeta: false,
-      
-      fetchMetaData: async () => {
+
+        fetchMetaData: async () => {
         try {
           set({ loadingMeta: true });
           const response = await axios.get('/api/settings');
           const settings = response.data;
 
-          if (settings && settings.success) {
-            const sizes = settings.sizes || [];
-            const sizesLetters = sizes.filter(s => s && s.type === 'letter');
-            const sizesNumbers = sizes.filter(s => s && s.type === 'number');
+          // 🔥 تحقق من وجود البيانات بشكل آمن
+          const safeSizes = Array.isArray(settings?.sizes) ? settings.sizes : [];
+          const sizesLetters = safeSizes.filter(s => s && s.type === 'letter');
+          const sizesNumbers = safeSizes.filter(s => s && s.type === 'number');
 
-            set({
-              categories: settings.categories || [],
-              sizesLetters,
-              sizesNumbers,
-              colorsList: settings.colors || [],
-              deliverySettings: settings.delivery || [],
-              orderCalculation: settings.orderCalculation || 'all',
-            });
-          } else {
-            set({
-              categories: [],
-              sizesLetters: [],
-              sizesNumbers: [],
-              colorsList: [],
-              deliverySettings: [],
-              orderCalculation: 'all',
-            });
-          }
+          set({
+            categories: Array.isArray(settings?.categories) ? settings.categories : [],
+            sizesLetters,
+            sizesNumbers,
+            colorsList: Array.isArray(settings?.colors) ? settings.colors : [],
+            deliverySettings: Array.isArray(settings?.delivery) ? settings.delivery : [],
+            orderCalculation: settings?.orderCalculation || 'all',
+          });
         } catch (error) {
           console.error('❌ Failed to fetch metadata:', error);
+          // 🔥 استخدم القيم الافتراضية في حالة الخطأ
           set({
             categories: [],
             sizesLetters: [],
