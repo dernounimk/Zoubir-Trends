@@ -3,7 +3,6 @@ import { persist } from 'zustand/middleware';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 
-
 const useSettingStore = create(
   persist(
     (set, get) => ({
@@ -15,29 +14,52 @@ const useSettingStore = create(
       orderCalculation: 'all',
       loadingMeta: false,
 
-fetchMetaData: async () => {
+      fetchMetaData: async () => {
         try {
           set({ loadingMeta: true });
-          const response = await axios.get('/settings');
+          const response = await axios.get('/api/settings');
           
-          // 🔥 تحقق من وجود البيانات بشكل آمن جداً
-          const data = response.data || {};
+          // 🔥 تحقق بشكل متعمق من كل مستوى من البيانات
+          const data = response?.data || {};
+          console.log('📦 Settings API Response:', data); // للتصحيح
           
+          // 🔥 تحقق آمن من كل حقل
+          const safeCategories = Array.isArray(data.categories) ? data.categories : [];
           const safeSizes = Array.isArray(data.sizes) ? data.sizes : [];
-          const sizesLetters = safeSizes.filter(s => s && s.type === 'letter') || [];
-          const sizesNumbers = safeSizes.filter(s => s && s.type === 'number') || [];
+          const safeColors = Array.isArray(data.colors) ? data.colors : [];
+          const safeDelivery = Array.isArray(data.delivery) ? data.delivery : [];
+          const safeOrderCalc = typeof data.orderCalculation === 'string' ? data.orderCalculation : 'all';
+
+          // 🔥 تصفية الآحجام بشكل آمن
+          const sizesLetters = safeSizes.filter(s => 
+            s && typeof s === 'object' && s.type === 'letter'
+          ) || [];
+          
+          const sizesNumbers = safeSizes.filter(s => 
+            s && typeof s === 'object' && s.type === 'number'
+          ) || [];
 
           set({
-            categories: Array.isArray(data.categories) ? data.categories : [],
+            categories: safeCategories,
             sizesLetters,
             sizesNumbers,
-            colorsList: Array.isArray(data.colors) ? data.colors : [],
-            deliverySettings: Array.isArray(data.delivery) ? data.delivery : [],
-            orderCalculation: data.orderCalculation || 'all',
+            colorsList: safeColors,
+            deliverySettings: safeDelivery,
+            orderCalculation: safeOrderCalc,
           });
+          
+          console.log('✅ Settings loaded successfully:', {
+            categories: safeCategories.length,
+            sizesLetters: sizesLetters.length,
+            sizesNumbers: sizesNumbers.length,
+            colors: safeColors.length,
+            delivery: safeDelivery.length
+          });
+          
         } catch (error) {
           console.error('❌ Failed to fetch metadata:', error);
-          // بيانات افتراضية آمنة
+          
+          // 🔥 بيانات افتراضية شاملة في حالة الخطأ
           set({
             categories: [],
             sizesLetters: [],
@@ -46,6 +68,8 @@ fetchMetaData: async () => {
             deliverySettings: [],
             orderCalculation: 'all',
           });
+          
+          toast.error('Failed to load settings');
         } finally {
           set({ loadingMeta: false });
         }
@@ -60,8 +84,9 @@ fetchMetaData: async () => {
           set({ loadingMeta: true });
           const response = await axios.put('/api/settings', { orderCalculation: orderCalc });
           
-          if (response.data && response.data.orderCalculation) {
-            set({ orderCalculation: response.data.orderCalculation });
+          const data = response?.data || {};
+          if (data.orderCalculation) {
+            set({ orderCalculation: data.orderCalculation });
             toast.success('Order calculation updated');
           }
         } catch (error) {
@@ -79,8 +104,14 @@ fetchMetaData: async () => {
       updateDeliverySettings: async (deliverySettings) => {
         try {
           set({ loadingMeta: true });
-          const response = await axios.put('/api/settings', { delivery: deliverySettings });
-          set({ deliverySettings: response.data.delivery || [] });
+          const response = await axios.put('/api/settings', { 
+            delivery: Array.isArray(deliverySettings) ? deliverySettings : [] 
+          });
+          
+          const data = response?.data || {};
+          set({ 
+            deliverySettings: Array.isArray(data.delivery) ? data.delivery : [] 
+          });
           toast.success('Delivery settings updated');
         } catch (error) {
           console.error('❌ Failed to update delivery settings:', error);
@@ -97,27 +128,32 @@ fetchMetaData: async () => {
         try {
           set({ loadingMeta: true });
 
-          if (!name || !image) throw new Error('Name and image are required');
+          if (!name) throw new Error('Name is required');
 
-          // تحويل الصورة إلى base64 إذا كانت ملف
           let imageBase64 = '';
-          if (typeof image !== 'string') {
+          if (image && typeof image !== 'string') {
             imageBase64 = await new Promise((resolve) => {
               const reader = new FileReader();
               reader.onload = () => resolve(reader.result);
               reader.readAsDataURL(image);
             });
           } else {
-            imageBase64 = image;
+            imageBase64 = image || '';
           }
 
           const response = await axios.put('/api/settings', {
             addCategory: { name, imageUrl: imageBase64 },
           });
 
-          const newCategory = response.data.categories.find(c => c.name === name);
+          const data = response?.data || {};
+          const newCategory = Array.isArray(data.categories) 
+            ? data.categories.find(c => c && c.name === name)
+            : null;
+            
           if (newCategory) {
-            set(state => ({ categories: [...state.categories, newCategory] }));
+            set(state => ({ 
+              categories: [...(state.categories || []), newCategory] 
+            }));
           }
 
           toast.success('Category added');
@@ -140,7 +176,9 @@ fetchMetaData: async () => {
           await axios.put('/api/settings', { removeCategoryId: id });
 
           set(state => ({
-            categories: state.categories.filter(c => String(c._id) !== String(id)),
+            categories: (state.categories || []).filter(c => 
+              c && String(c._id) !== String(id)
+            ),
           }));
 
           toast.success('Category deleted');
@@ -154,7 +192,7 @@ fetchMetaData: async () => {
       },
 
       // ────────────────────────────────
-      // إنشاء مقاس جديد (أحرف / أرقام)
+      // إنشاء مقاس جديد
       // ────────────────────────────────
       createSize: async ({ type, value }) => {
         try {
@@ -168,12 +206,16 @@ fetchMetaData: async () => {
             type: type === 'letters' ? 'letter' : 'number',
           };
 
-          // تحديث متفائل (قبل حفظ السيرفر)
+          // تحديث متفائل
           set(state => {
             if (type === 'letters') {
-              return { sizesLetters: [...state.sizesLetters, newSizeTemp] };
+              return { 
+                sizesLetters: [...(state.sizesLetters || []), newSizeTemp] 
+              };
             } else {
-              return { sizesNumbers: [...state.sizesNumbers, newSizeTemp] };
+              return { 
+                sizesNumbers: [...(state.sizesNumbers || []), newSizeTemp] 
+              };
             }
           });
 
@@ -181,18 +223,22 @@ fetchMetaData: async () => {
             addSize: { name: value, type: newSizeTemp.type },
           });
 
-          const newSize = response.data.sizes.find(s => s.name === value);
+          const data = response?.data || {};
+          const newSize = Array.isArray(data.sizes) 
+            ? data.sizes.find(s => s && s.name === value)
+            : null;
+            
           if (newSize) {
             set(state => {
               if (type === 'letters') {
                 return {
-                  sizesLetters: state.sizesLetters.map(s =>
+                  sizesLetters: (state.sizesLetters || []).map(s =>
                     s._id === tempId ? newSize : s
                   ),
                 };
               } else {
                 return {
-                  sizesNumbers: state.sizesNumbers.map(s =>
+                  sizesNumbers: (state.sizesNumbers || []).map(s =>
                     s._id === tempId ? newSize : s
                   ),
                 };
@@ -206,9 +252,13 @@ fetchMetaData: async () => {
           // التراجع عن التحديث المؤقت
           set(state => {
             if (type === 'letters') {
-              return { sizesLetters: state.sizesLetters.filter(s => s._id !== tempId) };
+              return { 
+                sizesLetters: (state.sizesLetters || []).filter(s => s._id !== tempId) 
+              };
             } else {
-              return { sizesNumbers: state.sizesNumbers.filter(s => s._id !== tempId) };
+              return { 
+                sizesNumbers: (state.sizesNumbers || []).filter(s => s._id !== tempId) 
+              };
             }
           });
 
@@ -229,8 +279,12 @@ fetchMetaData: async () => {
           await axios.put('/api/settings', { removeSizeId: id });
 
           set(state => ({
-            sizesLetters: state.sizesLetters.filter(s => String(s._id) !== String(id)),
-            sizesNumbers: state.sizesNumbers.filter(s => String(s._id) !== String(id)),
+            sizesLetters: (state.sizesLetters || []).filter(s => 
+              s && String(s._id) !== String(id)
+            ),
+            sizesNumbers: (state.sizesNumbers || []).filter(s => 
+              s && String(s._id) !== String(id)
+            ),
           }));
 
           toast.success('Size deleted');
@@ -255,10 +309,14 @@ fetchMetaData: async () => {
             addColor: { name, hex },
           });
 
-          const newColor = response.data.colors.find(c => c.name === name);
+          const data = response?.data || {};
+          const newColor = Array.isArray(data.colors) 
+            ? data.colors.find(c => c && c.name === name)
+            : null;
+            
           if (newColor) {
             set(state => ({
-              colorsList: [...state.colorsList, newColor],
+              colorsList: [...(state.colorsList || []), newColor],
             }));
           }
 
@@ -282,7 +340,9 @@ fetchMetaData: async () => {
           await axios.put('/api/settings', { removeColorId: id });
 
           set(state => ({
-            colorsList: state.colorsList.filter(c => String(c._id) !== String(id)),
+            colorsList: (state.colorsList || []).filter(c => 
+              c && String(c._id) !== String(id)
+            ),
           }));
 
           toast.success('Color deleted');

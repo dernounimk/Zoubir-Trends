@@ -47,6 +47,7 @@ const DEFAULT_OFFICE_PRICE = 400; // التوصيل للمكتب
 export const getSettings = async (req, res) => {
   try {
     let settings = await Setting.findOne();
+    console.log('🔧 Database Settings:', settings); // أضف هذا السطر
 
     if (!settings) {
       // إنشاء إعدادات افتراضية
@@ -67,14 +68,18 @@ export const getSettings = async (req, res) => {
     }
 
     // 🔥 تأكد من أن جميع الحقول موجودة
-    res.json({
+    const responseData = {
       success: true,
       categories: settings.categories || [],
       sizes: settings.sizes || [],
       colors: settings.colors || [],
       delivery: settings.delivery || [],
       orderCalculation: settings.orderCalculation || "all"
-    });
+    };
+    
+        console.log('📤 Sending Settings Response:', responseData); // أضف هذا السطر
+    res.json(responseData);
+
   } catch (err) {
     console.error("getSettings error:", err);
     res.status(500).json({ 
