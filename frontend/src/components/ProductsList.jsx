@@ -842,29 +842,31 @@ const ReviewsPopup = ({ product, onClose, isRTL, t }) => {
   const [deleteOnePopup, setDeleteOnePopup] = useState(false);
   const [deleteAllPopup, setDeleteAllPopup] = useState(false);
 
-useEffect(() => {
-  const fetchReviews = async () => {
-    try {
-      const res = await axiosInstance.get(`/reviews/${product._id}`);
-      setReviews(Array.isArray(res.data) ? res.data : []);
-    } catch (err) {
-      console.error("Error fetching reviews", err);
-      setReviews([]);
-    }
-  };
-  fetchReviews();
-}, [product._id]);
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const res = await axiosInstance.get(`/reviews/${product._id}`);
+        setReviews(Array.isArray(res.data) ? res.data : []);
+      } catch (err) {
+        console.error("Error fetching reviews", err);
+        setReviews([]);
+      }
+    };
+    fetchReviews();
+  }, [product._id]);
 
-const handleDeleteReview = async(reviewId) => {
-  setDeleteOnePopup(true);
-  setIDtoDelete(reviewId);
-}
+  const handleDeleteReview = async(reviewId) => {
+    setDeleteOnePopup(true);
+    setIDtoDelete(reviewId);
+  }
+
   const deleteReview = async () => {
     try {
       if (typeof deleteReviewByIdStore === "function") {
         await deleteReviewByIdStore(product._id, iDToDelete);
       } else {
-        await axios.delete(`/reviews/${product._id}/review/${iDToDelete}`);
+        // 🔥 أصلح الـ endpoint
+        await axiosInstance.delete(`/api/reviews/${product._id}/review/${iDToDelete}`);
       }
       setReviews((prev) => prev.filter((r) => r._id !== iDToDelete));
       toast.success("تم حذف التقييم");
@@ -882,7 +884,8 @@ const handleDeleteReview = async(reviewId) => {
       if (typeof deleteAllReviewsStore === "function") {
         await deleteAllReviewsStore(product._id);
       } else {
-        await axios.delete(`/reviews/${product._id}/delete-reviews`);
+        // 🔥 أصلح الـ endpoint
+        await axiosInstance.delete(`/api/reviews/${product._id}/delete-reviews`);
       }
       setReviews([]);
       toast.success("تم حذف جميع التقييمات");
@@ -895,25 +898,26 @@ const handleDeleteReview = async(reviewId) => {
     }
   };
 
- const handleToggleReviews = async () => {
-  try {
-    if (typeof toggleReviewsStore === "function") {
-      await toggleReviewsStore(product._id);
-    } else {
-      await axios.put(`/reviews/${product._id}/toggle-reviews`);
+  const handleToggleReviews = async () => {
+    try {
+      if (typeof toggleReviewsStore === "function") {
+        await toggleReviewsStore(product._id);
+      } else {
+        // 🔥 أصلح الـ endpoint
+        await axiosInstance.put(`/api/reviews/${product._id}/toggle-reviews`);
+      }
+
+      setReviewsEnabled((prev) => {
+        const newState = !prev;
+        toast.success(newState ? "تم تفعيل التقييمات" : "تم إيقاف التقييمات");
+        return newState;
+      });
+    } catch (err) {
+      console.error("toggleReviews error:", err);
+      toast.error(err.response?.data?.message || "فشل تحديث حالة التقييمات");
     }
-
-    setReviewsEnabled((prev) => {
-      const newState = !prev;
-      toast.success(newState ? "تم تفعيل التقييمات" : "تم إيقاف التقييمات");
-      return newState;
-    });
-  } catch (err) {
-    console.error("toggleReviews error:", err);
-    toast.error(err.response?.data?.message || "فشل تحديث حالة التقييمات");
-  }
-};
-
+  };
+  
  return createPortal(
   <div
     className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[9999]"
