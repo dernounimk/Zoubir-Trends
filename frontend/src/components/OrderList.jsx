@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
-import { useOrderStore } from "../stores/userOrderStore.js";
+import { useOrderStore } from "../stores/useOrderStore.js";
 import { createPortal } from "react-dom";
 import { Trash, Copy, CheckCheck, CheckCircle, XCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
