@@ -256,7 +256,14 @@
     "confirmDeleteMessage": "هل أنت متأكد أنك تريد حذف كود التخفيض هذا",
     "confirmDeleteYes": "حذف",
     "confirmDeleteCancel": "إلغاء",
-    "deleted": "تم حذف كود التخفيض"
+    "deleted": "تم حذف كود التخفيض",
+    "invalidAmount": "يرجى إدخال قيمة تخفيض صحيحة",
+    "copySuccess": "تم نسخ الكود",
+    "copyError": "فشل في نسخ الكود",
+    "unauthorized": "غير مصرح لك بهذا الإجراء",
+    "forbidden": "ليس لديك صلاحية لهذا الإجراء",
+    "active": "نشط",
+    "inactive": "غير نشط"
   },
   "productForm": {
     "title": "إنشاء منتج جديد",

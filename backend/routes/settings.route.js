@@ -6,6 +6,6 @@ import { protectRoute, adminRoute } from "../middleware/auth.middleware.js";
 const router = express.Router();
 
 router.get("/", getSettings);
-router.put("/", protectRoute, adminRoute, updateSettings);
+router.put("/", protectRoute, adminRoute, updateSettings); // 🔥 تأكد من أن هذا موجود
 
 export default router;

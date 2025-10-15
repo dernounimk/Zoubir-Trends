@@ -4,21 +4,12 @@ import { useAdminAuthStore } from "../stores/useAdminAuthStore";
 
 const axiosInstance = axios.create({
   baseURL: "https://zoubir-trends-backend.onrender.com",
-  timeout: 15000,
+  timeout: 30000,
 });
 
-// 🔥 إضافة /api تلقائياً لجميع ال requests
+// معالجة الطلبات
 axiosInstance.interceptors.request.use(
   (config) => {
-    // أضف /api تلقائياً إذا لم تكن موجودة
-    if (config.url && 
-        !config.url.startsWith('/api/') && 
-        !config.url.startsWith('/auth/') && 
-        config.url !== '/health' &&
-        !config.url.includes('.')) {
-      config.url = '/api' + config.url;
-    }
-    
     const { accessToken } = useAdminAuthStore.getState();
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`;
@@ -30,7 +21,7 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// معالجة أخطاء التوكن
+// معالجة الاستجابات
 axiosInstance.interceptors.response.use(
   (response) => {
     console.log(`✅ Response: ${response.status} ${response.config.url}`, response.data);

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import axios from 'axios';
+import axios from '../lib/axios'; // 🔥 استخدم axios المخصصة
 import { toast } from 'react-hot-toast';
 
 const useSettingStore = create(
@@ -18,8 +18,8 @@ const useSettingStore = create(
         try {
           set({ loadingMeta: true });
           
-          // 🔥 استخدم '/settings' بدون /api (سيضيفها axios تلقائياً)
-          const response = await axios.get('/settings');
+          // 🔥 غير إلى '/api/settings'
+          const response = await axios.get('/api/settings');
           
           const data = response?.data || {};
           console.log('📦 Settings API Response:', data);
@@ -80,8 +80,8 @@ const useSettingStore = create(
         if (!['confirmed', 'all'].includes(orderCalc)) return;
         try {
           set({ loadingMeta: true });
-          // 🔥 استخدم '/settings' بدون /api
-          const response = await axios.put('/settings', { orderCalculation: orderCalc });
+          // 🔥 غير إلى '/api/settings'
+          const response = await axios.put('/api/settings', { orderCalculation: orderCalc });
           
           const data = response?.data || {};
           if (data.orderCalculation) {
@@ -100,8 +100,8 @@ const useSettingStore = create(
       updateDeliverySettings: async (deliverySettings) => {
         try {
           set({ loadingMeta: true });
-          // 🔥 استخدم '/settings' بدون /api
-          const response = await axios.put('/settings', { 
+          // 🔥 غير إلى '/api/settings'
+          const response = await axios.put('/api/settings', { 
             delivery: Array.isArray(deliverySettings) ? deliverySettings : [] 
           });
           
@@ -135,8 +135,8 @@ const useSettingStore = create(
             imageBase64 = image || '';
           }
 
-          // 🔥 استخدم '/settings' بدون /api
-          const response = await axios.put('/settings', {
+          // 🔥 غير إلى '/api/settings'
+          const response = await axios.put('/api/settings', {
             addCategory: { name, imageUrl: imageBase64 },
           });
 
@@ -165,8 +165,8 @@ const useSettingStore = create(
       deleteCategory: async (id) => {
         try {
           set({ loadingMeta: true });
-          // 🔥 استخدم '/settings' بدون /api
-          await axios.put('/settings', { removeCategoryId: id });
+          // 🔥 غير إلى '/api/settings'
+          await axios.put('/api/settings', { removeCategoryId: id });
 
           set(state => ({
             categories: (state.categories || []).filter(c => 
@@ -209,8 +209,8 @@ const useSettingStore = create(
             }
           });
 
-          // 🔥 استخدم '/settings' بدون /api
-          const response = await axios.put('/settings', {
+          // 🔥 غير إلى '/api/settings'
+          const response = await axios.put('/api/settings', {
             addSize: { name: value, type: newSizeTemp.type },
           });
 
@@ -264,8 +264,8 @@ const useSettingStore = create(
       deleteSize: async (id) => {
         try {
           set({ loadingMeta: true });
-          // 🔥 استخدم '/settings' بدون /api
-          await axios.put('/settings', { removeSizeId: id });
+          // 🔥 غير إلى '/api/settings'
+          await axios.put('/api/settings', { removeSizeId: id });
 
           set(state => ({
             sizesLetters: (state.sizesLetters || []).filter(s => 
@@ -291,8 +291,8 @@ const useSettingStore = create(
           set({ loadingMeta: true });
           if (!name || !hex) throw new Error('Name and hex are required');
 
-          // 🔥 استخدم '/settings' بدون /api
-          const response = await axios.put('/settings', {
+          // 🔥 غير إلى '/api/settings'
+          const response = await axios.put('/api/settings', {
             addColor: { name, hex },
           });
 
@@ -321,8 +321,8 @@ const useSettingStore = create(
       deleteColor: async (id) => {
         try {
           set({ loadingMeta: true });
-          // 🔥 استخدم '/settings' بدون /api
-          await axios.put('/settings', { removeColorId: id });
+          // 🔥 غير إلى '/api/settings'
+          await axios.put('/api/settings', { removeColorId: id });
 
           set(state => ({
             colorsList: (state.colorsList || []).filter(c => 
