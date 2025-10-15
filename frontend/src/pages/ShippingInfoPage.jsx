@@ -136,22 +136,26 @@ const ShippingInfoPage = () => {
       couponCode: isCouponApplied ? coupon.code : null,
     };
 
-try {
-    // ✅ الصحيح: استخدام axios
-    const response = await axios.post("/orders", orderData);
+ try {
+    // ❌ الخطأ: استخدام fetch مباشرة
+    const response = await fetch("/api/orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(orderData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      toast.error(errorData.message || t("shippingInfo.errors.orderFailed"));
+      return;
+    }
 
     toast.success(t("shippingInfo.success.orderSent"));
     navigate("/purchase-success", { state: { orderNumber, deliveryDays } });
   } catch (error) {
-    console.error("Order creation error:", error);
-    
-    if (error.response?.data?.message) {
-      toast.error(error.response.data.message);
-    } else {
-      toast.error(t("shippingInfo.errors.orderError"));
-    }
+    console.error(error);
+    toast.error(t("shippingInfo.errors.orderError"));
   }
-};
   };
 
   const shippingCost =
