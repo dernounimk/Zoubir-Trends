@@ -1,6 +1,8 @@
+// ProductsList.js
 import { motion, AnimatePresence } from "framer-motion";
 import { Trash, Star, Eye, Pencil, Trash2, InstagramIcon, X, MessageSquare } from "lucide-react";
 import { useProductStore } from "../stores/useProductStore";
+import useSettingStore from "../stores/useSettingStore"; // 🔥 أضف هذا
 import toast from "react-hot-toast";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
@@ -18,11 +20,17 @@ const ProductsList = () => {
   const isRTL = i18n.language === 'ar';
 
   const [isLoading, setIsLoading] = useState(true);
-  const [categories, setCategories] = useState([]);
-  const [sizesLetters, setSizesLetters] = useState([]);
-  const [sizesNumbers, setSizesNumbers] = useState([]);
-  const [colorsList, setColorsList] = useState([]);
   const [managingReviews, setManagingReviews] = useState(null);
+
+  // 🔥 استخدم useSettingStore بدلاً من state محلي
+  const { 
+    categories, 
+    sizesLetters, 
+    sizesNumbers, 
+    colorsList, 
+    fetchMetaData,
+    loadingMeta 
+  } = useSettingStore();
 
   const { deleteProduct, toggleFeaturedProduct, products, fetchAllProducts, updateProduct } = useProductStore();
 
@@ -37,22 +45,16 @@ const ProductsList = () => {
   const [filterDiscount, setFilterDiscount] = useState(false);
   const [filterFeature, setFilterFeature] = useState(false);
 
-  // 🔥 إصلاح: فلترة المنتجات مع معالجة القيم غير المعرفة
+  // فلترة المنتجات
   const filteredProducts = products.filter(product => {
     if (!product) return false;
     
-    // فلترة حسب الاسم مع تجاهل حالة الأحرف
     const matchesSearch = product.name?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false;
-    
-    // فلترة حسب التصنيف
     const matchesCategory = !selectedCategory || 
       product.category?._id === selectedCategory || 
       product.category === selectedCategory;
-    
-    // فلترة حسب وجود خصم
     const matchesDiscount = !filterDiscount || 
       (product.priceAfterDiscount && product.priceAfterDiscount > 0);
-
     const matchesFeature = !filterFeature || product.isFeatured;
     
     return matchesSearch && matchesCategory && matchesDiscount && matchesFeature;
@@ -60,10 +62,8 @@ const ProductsList = () => {
 
   const highlightText = (text, highlight) => {
     if (!highlight || !text) return text;
-
     const regex = new RegExp(`(${highlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
     const parts = text.split(regex);
-
     return parts.map((part, i) =>
       regex.test(part) ? (
         <span key={i} className="bg-yellow-400 text-black rounded px-0.5">{part}</span>
@@ -73,71 +73,36 @@ const ProductsList = () => {
     );
   };
 
-  // 🔥 إصلاح: جلب الإعدادات مع معالجة الأخطاء
+  // 🔥 استخدم fetchMetaData من الـ store بدلاً من axios مباشرة
   useEffect(() => {
-    const fetchSettings = async () => {
+    const loadData = async () => {
       try {
-        console.log("🔄 جلب الإعدادات للمنتجات...");
-        const res = await axios.get("/api/settings");
-        const data = res.data;
-
-        console.log("📊 بيانات الإعدادات المستلمة:", {
-          sizes: data.sizes,
-          categories: data.categories,
-          colors: data.colors
-        });
-
-        // 🔥 معالجة البيانات غير المعرفة
-        const safeSizes = Array.isArray(data.sizes) ? data.sizes : [];
-        const safeCategories = Array.isArray(data.categories) ? data.categories : [];
-        const safeColors = Array.isArray(data.colors) ? data.colors : [];
-
-        setCategories(safeCategories);
-        
-        // 🔥 تصفية المقاسات بحروف
-        const letters = safeSizes
-          .filter(s => s && s.type === "letter" && s.name)
-          .map(s => s.name)
-          .filter(Boolean);
-        
-        // 🔥 تصفية المقاسات بأرقام  
-        const numbers = safeSizes
-          .filter(s => s && s.type === "number" && s.name)
-          .map(s => s.name)
-          .filter(Boolean);
-        
-        setSizesLetters(letters);
-        setSizesNumbers(numbers);
-        setColorsList(safeColors);
-
-        console.log("✅ الإعدادات المعالجة:", {
-          letters: letters.length,
-          numbers: numbers.length,
-          categories: safeCategories.length,
-          colors: safeColors.length
-        });
-
+        setIsLoading(true);
+        await fetchMetaData(); // 🔥 هذا يستخدم الـ store
+        await fetchAllProducts();
       } catch (error) {
-        console.error("❌ خطأ في جلب الإعدادات:", error);
-        console.error("تفاصيل الخطأ:", error.response?.data || error.message);
-        
-        // 🔥 تعيين قيم افتراضية فارغة في حالة الخطأ
-        setCategories([]);
-        setSizesLetters([]);
-        setSizesNumbers([]);
-        setColorsList([]);
+        console.error("❌ خطأ في جلب البيانات:", error);
+        toast.error(t("productsList.loadError"));
       } finally {
         setIsLoading(false);
       }
     };
-    fetchSettings();
-  }, [t]);
-  
-  useEffect(() => {
-    fetchAllProducts();
-  }, [fetchAllProducts]);
+    loadData();
+  }, [fetchMetaData, fetchAllProducts, t]);
 
-  // 🔥 إصلاح: toggleSelection مع معالجة القيم غير المعرفة
+  // 🔥 دالة لتحويل ID الفئة إلى اسم الفئة
+  const getCategoryName = (category) => {
+    if (!category) return t("productsList.noCategory");
+    
+    if (typeof category === 'object') {
+      return category.name;
+    }
+    
+    // إذا كان string (ID)، ابحث عن الفئة
+    const categoryObj = categories.find(cat => cat._id === category);
+    return categoryObj ? categoryObj.name : t("productsList.unknownCategory");
+  };
+
   const toggleSelection = (field, value) => {
     setEditingProduct((prev) => {
       if (!prev) return prev;
@@ -145,7 +110,6 @@ const ProductsList = () => {
       const current = Array.isArray(prev[field]) ? prev[field] : [];
       
       if (field === 'colors') {
-        // التعامل مع الألوان ككائنات
         const exists = current.some(c => 
           (typeof c === 'object' && c._id === value._id) || 
           (typeof c === 'string' && c === value._id)
@@ -162,7 +126,6 @@ const ProductsList = () => {
           return { ...prev, [field]: [...current, value] };
         }
       } else {
-        // التعامل مع المقاسات كنصوص
         if (current.includes(value)) {
           return { ...prev, [field]: current.filter(v => v !== value) };
         } else {
@@ -177,17 +140,17 @@ const ProductsList = () => {
     setShowPopup(true);
   };
 
-  // 🔥 إصلاح: تحرير المنتج مع معالجة القيم غير المعرفة
+  // 🔥 تحرير المنتج - استخدم البيانات من الـ store
   const editProduct = (product) => {
     if (!product) return;
     
     // تحويل IDs الألوان إلى كائنات كاملة
     const fullColors = Array.isArray(product.colors) ? 
       product.colors.map(colorId => 
-        colorsList.find(c => c._id == colorId) || colorId
+        colorsList.find(c => c._id === colorId) || colorId
       ) : [];
     
-    // تحويل ID التصنيف إلى كائن كامل إذا كان ID فقط
+    // تحويل ID التصنيف إلى كائن كامل
     const fullCategory = typeof product.category === 'string' ? 
       categories.find(c => c._id === product.category) || product.category : 
       product.category;
@@ -216,7 +179,6 @@ const ProductsList = () => {
     if (!editingProduct) return;
     
     try {
-      // تحويل الملفات الجديدة إلى Base64
       const oldImages = Array.isArray(editingProduct.images) ? editingProduct.images : [];
       const newFiles = Array.isArray(editingProduct.newImages) ? editingProduct.newImages : [];
 
@@ -250,7 +212,7 @@ const ProductsList = () => {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || loadingMeta) {
     return <LoadingSpinner />;
   }
 
@@ -303,7 +265,7 @@ const ProductsList = () => {
         />
       </div>
 
-      <div className="overflow-x-auto">
+            <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-[var(--color-bg-gray)] text-xs">
           <thead className="bg-[var(--color-bg)]">
             <tr>
@@ -367,11 +329,9 @@ const ProductsList = () => {
                   )}
                 </td>
 
-                {/* خلية التصنيف */}
+                {/* 🔥 خلية التصنيف - استخدم الدالة الجديدة */}
                 <td className="break-words px-2 py-2 text-center">
-                  {typeof product.category === 'object' ? 
-                    product.category.name : 
-                    categories.find(c => c._id === product.category)?.name || product.category}
+                  {getCategoryName(product.category)}
                 </td>
 
                 {/* خلية الإجراءات */}
