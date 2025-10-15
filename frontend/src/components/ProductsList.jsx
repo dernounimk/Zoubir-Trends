@@ -99,37 +99,40 @@ const ProductsList = () => {
     return categoryObj ? categoryObj.name : t("productsList.unknownCategory");
   };
 
-  const toggleSelection = (field, value) => {
-    setEditingProduct((prev) => {
-      if (!prev) return prev;
+const toggleSelection = (field, value) => {
+  setEditingProduct((prev) => {
+    if (!prev) return prev;
+    
+    const current = Array.isArray(prev[field]) ? prev[field] : [];
+    
+    if (field === 'colors') {
+      const exists = current.some(c => 
+        (typeof c === 'object' && c._id === value._id) || 
+        (typeof c === 'string' && c === value._id)
+      );
       
-      const current = Array.isArray(prev[field]) ? prev[field] : [];
-      
-      if (field === 'colors') {
-        const exists = current.some(c => 
-          (typeof c === 'object' && c._id === value._id) || 
-          (typeof c === 'string' && c === value._id)
-        );
-        
-        if (exists) {
-          return { 
-            ...prev, 
-            [field]: current.filter(c => 
-              (typeof c === 'object' ? c._id !== value._id : c !== value._id)
-            ) 
-          };
-        } else {
-          return { ...prev, [field]: [...current, value] };
-        }
+      if (exists) {
+        return { 
+          ...prev, 
+          [field]: current.filter(c => 
+            (typeof c === 'object' ? c._id !== value._id : c !== value._id)
+          ) 
+        };
       } else {
-        if (current.includes(value)) {
-          return { ...prev, [field]: current.filter(v => v !== value) };
-        } else {
-          return { ...prev, [field]: [...current, value] };
-        }
+        return { ...prev, [field]: [...current, value] };
       }
-    });
-  };
+    } else {
+      // 🔥 للمقاسات: استخدم name إذا كان كائن، أو القيمة مباشرة إذا كانت نص
+      const sizeValue = typeof value === 'object' ? value.name : value;
+      
+      if (current.includes(sizeValue)) {
+        return { ...prev, [field]: current.filter(v => v !== sizeValue) };
+      } else {
+        return { ...prev, [field]: [...current, sizeValue] };
+      }
+    }
+  });
+};
 
   const openDeletePopup = (id) => {
     setSelectedProductId(id);
@@ -545,44 +548,44 @@ const ProductsList = () => {
                 </div>
 
                 {/* المقاسات */}
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    {t("productEditForm.sizes")}
-                  </label>
+<div>
+  <label className="block text-sm font-medium mb-2">
+    {t("productEditForm.sizes")}
+  </label>
 
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowNumbers((prev) => !prev);
-                      setEditingProduct((prev) => ({
-                        ...prev,
-                        sizes: [],
-                      }));
-                    }}
-                    className="mb-3 px-3 py-1 rounded-md bg-[var(--color-accent)] text-white hover:[var(--color-accent-hover)]"
-                  >
-                    {showNumbers 
-                      ? t("productEditForm.showLetters") 
-                      : t("productEditForm.showNumbers")}
-                  </button>
+  <button
+    type="button"
+    onClick={() => {
+      setShowNumbers((prev) => !prev);
+      setEditingProduct((prev) => ({
+        ...prev,
+        sizes: [],
+      }));
+    }}
+    className="mb-3 px-3 py-1 rounded-md bg-[var(--color-accent)] text-white hover:[var(--color-accent-hover)]"
+  >
+    {showNumbers 
+      ? t("productEditForm.showLetters") 
+      : t("productEditForm.showNumbers")}
+  </button>
 
-                  <div className="flex flex-wrap gap-2">
-                    {(showNumbers ? sizesNumbers : sizesLetters).map((size) => (
-                      <button
-                        type="button"
-                        key={size}
-                        onClick={() => toggleSelection("sizes", size)}
-                        className={`px-3 py-1 rounded-md border ${
-                          Array.isArray(editingProduct.sizes) && editingProduct.sizes.includes(size)
-                            ? "bg-[var(--color-accent)] border-[var(--color-accent-hover)] text-white"
-                            : "bg-[var(--color-bg-gray)] border-[var(--color-accent)]"
-                        }`}
-                      >
-                        {size}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+  <div className="flex flex-wrap gap-2">
+    {(showNumbers ? sizesNumbers : sizesLetters).map((size) => (
+      <button
+        type="button"
+        key={size._id || size} // 🔥 أصلح المفتاح
+        onClick={() => toggleSelection("sizes", size.name || size)} // 🔥 أصلح القيمة
+        className={`px-3 py-1 rounded-md border ${
+          Array.isArray(editingProduct.sizes) && editingProduct.sizes.includes(size.name || size)
+            ? "bg-[var(--color-accent)] border-[var(--color-accent-hover)] text-white"
+            : "bg-[var(--color-bg-gray)] border-[var(--color-accent)]"
+        }`}
+      >
+        {size.name || size} {/* 🔥 أصلح العرض */}
+      </button>
+    ))}
+  </div>
+</div>
 
                 {/* الصور */}
                 <div>
