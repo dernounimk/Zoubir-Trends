@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 import { useOrderStore } from "../stores/userOrderStore.js";
 import { createPortal } from "react-dom";
-import { Trash, Copy, CheckCheck, CheckCircle ,XCircle } from "lucide-react";
+import { Trash, Copy, CheckCheck, CheckCircle, XCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import useSettingStore from '../stores/useSettingStore.js';
@@ -30,7 +30,7 @@ const OrderList = () => {
   const [selectAll, setSelectAll] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
-  const [selectedOrder, setSelectedOrder] = useState("");
+  const [selectedOrder, setSelectedOrder] = useState(null);
   const [deliveryPhone, setDeliveryPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [pressTimer, setPressTimer] = useState(null);
@@ -42,42 +42,44 @@ const OrderList = () => {
   const [sortOrder, setSortOrder] = useState('desc');
   const [stateFilter, setStateFilter] = useState('all');
   const [clientAskforPhone, setClientAskforPhone] = useState(false);
+  const [hasLongPressed, setHasLongPressed] = useState(false);
   
-  // تحديث الفلترة والفرز
+  // 🔥 إصلاح: فلترة وترتيب الطلبات مع معالجة القيم غير المعرفة
   const filteredSortedOrders = useMemo(() => {
-    let result = [...orders];
+    let result = Array.isArray(orders) ? [...orders] : [];
 
     // فلترة حسب الحالة
-    if (statusFilter!== 'all') {
+    if (statusFilter !== 'all') {
       const isConfirmed = statusFilter === 'confirmed';
-      result = result.filter(order => order.isConfirmed === isConfirmed);
+      result = result.filter(order => order?.isConfirmed === isConfirmed);
     }
 
     // فلترة حسب الولاية
-    if (stateFilter!== 'all') {
-      result = result.filter(order => order.wilaya === stateFilter);
+    if (stateFilter !== 'all') {
+      result = result.filter(order => order?.wilaya === stateFilter);
     }
 
     // فلترة بحث حسب الحقل
     if (searchQuery) {
       const field = searchTypes[searchTypeIndex];
       result = result.filter(order =>
-        (order[field]?? '').toString().toLowerCase().includes(searchQuery.toLowerCase())
+        (order?.[field] ?? '').toString().toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
     if (clientAskforPhone) {
-      result = result.filter(order => order.isAskForPhone);
+      result = result.filter(order => order?.isAskForPhone);
     }
 
-    // ترتيب حسب التاريخ (نفترض عندك orderDate)
-    result.sort((a, b) =>
-      sortOrder === 'desc'? new Date(b.createdAt) - new Date(a.createdAt): new Date(a.createdAt) - new Date(b.createdAt)
-    );
+    // ترتيب حسب التاريخ
+    result.sort((a, b) => {
+      const dateA = a?.createdAt ? new Date(a.createdAt) : new Date(0);
+      const dateB = b?.createdAt ? new Date(b.createdAt) : new Date(0);
+      return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+    });
 
     return result;
-  }, [orders, statusFilter, sortOrder, searchQuery, searchTypeIndex, stateFilter]);
-
+  }, [orders, statusFilter, sortOrder, searchQuery, searchTypeIndex, stateFilter, clientAskforPhone]);
 
   useEffect(() => {
     if (selectedOrder?.deliveryPhone) {
@@ -92,9 +94,11 @@ const OrderList = () => {
     } else {
       setSelectAll(selectedOrders.length === orders.length && orders.length > 0);
     }
-  }, [selectedOrders]);
+  }, [selectedOrders, orders]);
 
   const handleSave = async (orderId) => {
+    if (!orderId) return;
+    
     setLoading(true);
     try {
       const updatedOrder = await updateDeliveryPhone(orderId, deliveryPhone.trim());
@@ -109,14 +113,14 @@ const OrderList = () => {
   const navigate = useNavigate();
 
   const hasMixedStatus = selectedOrders.length > 0 && 
-  orders.some(o => selectedOrders.includes(o._id) && o.isConfirmed) &&
-  orders.some(o => selectedOrders.includes(o._id) && !o.isConfirmed);
+    orders.some(o => selectedOrders.includes(o?._id) && o?.isConfirmed) &&
+    orders.some(o => selectedOrders.includes(o?._id) && !o?.isConfirmed);
 
   const allConfirmed = selectedOrders.length > 0 && 
-  selectedOrders.every(id => orders.find(o => o._id === id)?.isConfirmed);
+    selectedOrders.every(id => orders.find(o => o?._id === id)?.isConfirmed);
 
   const toggleConfirmation = async () => {
-  if (selectedOrders.length === 0 || hasMixedStatus) return;
+    if (selectedOrders.length === 0 || hasMixedStatus) return;
     try {
       await toggleOrderConfirmation(selectedOrders);
       toast.success(
@@ -130,11 +134,20 @@ const OrderList = () => {
   };
 
   useEffect(() => {
-    fetchOrders();
-    setIsLoading(false);
-    setSelectAll(selectedOrders.length === orders.length && orders.length > 0);
-
-  }, [fetchOrders, orders]);
+    const loadData = async () => {
+      setIsLoading(true);
+      try {
+        await fetchOrders();
+      } catch (error) {
+        console.error("❌ خطأ في جلب الطلبات:", error);
+        toast.error(t("orders.loadError"));
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadData();
+  }, [fetchOrders, t]);
 
   // دالة لتحويل ID اللون إلى كائن لون كامل
   const getFullColorData = (colorId) => {
@@ -144,42 +157,47 @@ const OrderList = () => {
   };
 
   const handleDelete = async () => {
-    if (selectedOrderId) {
-      await deleteOrder(selectedOrderId);
-      toast.success(t("orders.deleteSingle"));
-    } else if (selectedOrders.length > 0) {
-      await Promise.all(selectedOrders.map((id) => deleteOrder(id)));
-      toast.success(t("orders.deleteSuccess", { count: selectedOrders.length }));
-      setSelectedOrders([]);
-      setSelectAll(false);
+    try {
+      if (selectedOrderId) {
+        await deleteOrder(selectedOrderId);
+        toast.success(t("orders.deleteSingle"));
+      } else if (selectedOrders.length > 0) {
+        await Promise.all(selectedOrders.map((id) => deleteOrder(id)));
+        toast.success(t("orders.deleteSuccess", { count: selectedOrders.length }));
+        setSelectedOrders([]);
+        setSelectAll(false);
+      }
+    } catch (error) {
+      toast.error(t("orders.deleteError"));
+    } finally {
+      setShowPopup(false);
+      setSelectedOrderId(null);
     }
-    setShowPopup(false);
-    setSelectedOrderId(null);
   };
 
-function highlightText(text = '', query, highlight) {
-  if (!highlight ||!query) return text;
-  const regex = new RegExp(`(${query})`, 'gi');
-  const parts = text.split(regex);
-  return parts.map((part, i) =>
-    regex.test(part)? (
-      <span key={i} className="bg-yellow-400 text-black rounded px-0.5">{part}</span>
-    ): (
-      part
-    )
-  );
-}
+  function highlightText(text = '', query, highlight) {
+    if (!highlight || !query || !text) return text;
+    const regex = new RegExp(`(${query})`, 'gi');
+    const parts = text.split(regex);
+    return parts.map((part, i) =>
+      regex.test(part) ? (
+        <span key={i} className="bg-yellow-400 text-black rounded px-0.5">{part}</span>
+      ) : (
+        part
+      )
+    );
+  }
 
-const searchFields = [
-  { key: 'orderNumber', label: t("orders.orderNumber") },
-  { key: 'fullName', label: t("orders.fullName") },
-  { key: 'phoneNumber', label: t("orders.phoneNumber") }
-];
+  const searchFields = [
+    { key: 'orderNumber', label: t("orders.orderNumber") },
+    { key: 'fullName', label: t("orders.fullName") },
+    { key: 'phoneNumber', label: t("orders.phoneNumber") }
+  ];
 
   if (isLoading) {
-      return <LoadingSpinner />;
-    }
-  
+    return <LoadingSpinner />;
+  }
+
   return (
     <motion.div
       className="bg-[var(--color-bg-gray)] text-[var(--color-text-secondary)] shadow-xl rounded-xl"
@@ -386,8 +404,8 @@ const searchFields = [
               </motion.div>
           )}
 
-      <div className="w-full overflow-x-auto rounded-b-xl scrollbar-x-hide mt-1">
-          <table className="min-w-full table-auto divide-y select-none divide-[var(--color-bg-gray)] text-xs">
+            <div className="w-full overflow-x-auto rounded-b-xl scrollbar-x-hide mt-1">
+        <table className="min-w-full table-auto divide-y select-none divide-[var(--color-bg-gray)] text-xs">
           <thead className="bg-[var(--color-bg)] text-center">
             <tr>
               {headers.map((title, i) => (
@@ -401,124 +419,86 @@ const searchFields = [
             </tr>
           </thead>
           <tbody className="bg-[var(--color-bg-gray)] divide-y divide-[var(--color-bg)]">
-                  {filteredSortedOrders.map((order) => (
-                  <tr              
-                  key={order._id}
-                  onClick={() => {
-                    if (!isSelectionMode) {
-                      setSelectedOrder(order);
-                    }
-                  }}
-                  onMouseDown={() => {
-                    if (pressTimer) return; // يمنع التكرار
-                    if (!isSelectionMode) {
-                      const timer = setTimeout(() => {
-                        setIsSelectionMode(true);  // تفعيل وضع التحديد بالضغط المطول
-                        setPressTimer(null);
-                      }, 600);
-                      setPressTimer(timer);
-                    }
-                  }}
-                  onMouseUp={() => {
-                    if (pressTimer) {
-                      clearTimeout(pressTimer);
+            {Array.isArray(filteredSortedOrders) && filteredSortedOrders.map((order) => (
+              <tr              
+                key={order?._id}
+                onClick={() => {
+                  if (!isSelectionMode && order) {
+                    setSelectedOrder(order);
+                  }
+                }}
+                onMouseDown={() => {
+                  if (pressTimer || !order) return;
+                  if (!isSelectionMode) {
+                    const timer = setTimeout(() => {
+                      setIsSelectionMode(true);
                       setPressTimer(null);
+                    }, 600);
+                    setPressTimer(timer);
+                  }
+                }}
+                onMouseUp={() => {
+                  if (pressTimer) {
+                    clearTimeout(pressTimer);
+                    setPressTimer(null);
+                  }
+                  if (isSelectionMode && order) {
+                    if (selectedOrders.includes(order._id)) {
+                      setSelectedOrders(prev => prev.filter(id => id !== order._id));
+                    } else {
+                      setSelectedOrders(prev => [...prev, order._id]);
                     }
-                    if (isSelectionMode) {
-                      // نقرة عادية لتحديد/إلغاء التحديد بعد تفعيل الوضع
-                      if (selectedOrders.includes(order._id)) {
-                        setSelectedOrders(prev => prev.filter(id => id!== order._id));
-                      } else {
-                        setSelectedOrders(prev => [...prev, order._id]);
-                      }
-                    }
-                  }}
-                  onMouseLeave={() => {
-                    if (pressTimer) {
-                      clearTimeout(pressTimer);
-                      setPressTimer(null);
-                    }
-                    }}
-                  onTouchStart={() => {
-                    if (pressTimer) return;
-                    if (!isSelectionMode) {
-                      const timer = setTimeout(() => {
-                        setIsSelectionMode(true);
-                        setPressTimer(null);
-                        setHasLongPressed(true);
-                      }, 600);
-                      setPressTimer(timer);
-                    }
-                  }}
-                  onTouchEnd={() => {
-                    if (pressTimer) {
-                      clearTimeout(pressTimer);
-                      setPressTimer(null);
-                    }
-                    if (isSelectionMode) {
-                      if (!hasLongPressed) return; // تجاهل النقر المبكر قبل الضغط الطويل
-                      if (selectedOrders.includes(order._id)) {
-                        setSelectedOrders(prev => prev.filter(id => id!== order._id));
-                      } else {
-                        setSelectedOrders(prev => [...prev, order._id]);
-                      }
-                    }
-                  }}
-                  onTouchMove={() => {
-                    if (pressTimer) {
-                      clearTimeout(pressTimer);
-                      setPressTimer(null);
-                    }
-                  }}
-                  onTouchCancel={() => {
-                    if (pressTimer) {
-                      clearTimeout(pressTimer);
-                      setPressTimer(null);
-                    }
-                  }}
+                  }
+                }}
+                onMouseLeave={() => {
+                  if (pressTimer) {
+                    clearTimeout(pressTimer);
+                    setPressTimer(null);
+                  }
+                }}
                 className={`transition text-center duration-200 ${
-                    order.isAskForPhone && !order.deliveryPhone && !selectedOrders.includes(order._id) ? 'bg-yellow-900/40': ''
-                } ${selectedOrders.includes(order._id)? 'bg-green-900/40': 'hover:bg-[var(--color-bg-opacity)]'}`}>
+                  order?.isAskForPhone && !order?.deliveryPhone && !selectedOrders.includes(order?._id) ? 'bg-yellow-900/40' : ''
+                } ${selectedOrders.includes(order?._id) ? 'bg-green-900/40' : 'hover:bg-[var(--color-bg-opacity)]'}`}>
 
                 <td className="break-words px-2 py-2">
-                  {searchTypeIndex === 0 ? highlightText(order.orderNumber, searchQuery, true): order.orderNumber}
+                  {searchTypeIndex === 0 ? highlightText(order?.orderNumber, searchQuery, true) : order?.orderNumber}
                 </td>
 
                 <td className="break-words px-2 py-2">
-                  {searchTypeIndex === 1?highlightText(order.fullName, searchQuery, true): order.fullName}
+                  {searchTypeIndex === 1 ? highlightText(order?.fullName, searchQuery, true) : order?.fullName}
                 </td>
 
                 <td className="break-words px-2 py-2">
-                  {searchTypeIndex === 2? highlightText(order.phoneNumber, searchQuery, true): order.phoneNumber}
+                  {searchTypeIndex === 2 ? highlightText(order?.phoneNumber, searchQuery, true) : order?.phoneNumber}
                 </td>
 
-                <td  className="break-words px-2 py-2">{order.wilaya}</td>
-                <td  className="break-words px-2 py-2">
-                    <motion.div
-                      className={`inline-flex items-center gap-1 p-1 rounded-full font-semibold ${
-                        order.isConfirmed
-                          ? "bg-green-900 text-green-400 border border-green-500/50"
-                          : "bg-yellow-900 text-yellow-400 border border-yellow-500/50"
-                      }`}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      {order.isConfirmed ? (
-                        <>
-                          <CheckCircle className="h-4 w-4" />
-                          <span>{t("orders.confirmed")}</span>
-                        </>
-                      ) : (
-                        <>
-                          <XCircle className="h-4 w-4" />
-                          <span>{t("orders.pending")}</span>
-                        </>
-                      )}
-                    </motion.div>
-                  </td>
+                <td className="break-words px-2 py-2">{order?.wilaya}</td>
+                <td className="break-words px-2 py-2">
+                  <motion.div
+                    className={`inline-flex items-center gap-1 p-1 rounded-full font-semibold ${
+                      order?.isConfirmed
+                        ? "bg-green-900 text-green-400 border border-green-500/50"
+                        : "bg-yellow-900 text-yellow-400 border border-yellow-500/50"
+                    }`}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    {order?.isConfirmed ? (
+                      <>
+                        <CheckCircle className="h-4 w-4" />
+                        <span>{t("orders.confirmed")}</span>
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="h-4 w-4" />
+                        <span>{t("orders.pending")}</span>
+                      </>
+                    )}
+                  </motion.div>
+                </td>
               </tr>
             ))}
-            {orders.length === 0 && (
+            {(!Array.isArray(orders) || orders.length === 0) && (
               <tr>
                 <td colSpan={9} className="text-center py-8">
                   {t("orders.noOrders")}
@@ -538,16 +518,15 @@ const searchFields = [
               exit={{ opacity: 0 }}
               dir={isRTL ? 'rtl' : 'ltr'}
             >
-        <motion.div
-                  className="bg-[var(--color-bg)] p-6 rounded-xl text-[var(--color-text-secondary)] w-full max-w-3xl shadow-2xl max-h-[90vh] overflow-y-auto"
-                  initial={{ scale: 0.8 }}
-                  animate={{ scale: 1 }}
-                  exit={{ scale: 0.8 }}
-                >
-                  <h3 className="text-xl font-bold mb-4 text-center border-b pb-2 border-[var(--color-bg-gray)]">
-                    {t("orders.detailsTitle")}
-                  </h3>
-
+              <motion.div
+                className="bg-[var(--color-bg)] p-6 rounded-xl text-[var(--color-text-secondary)] w-full max-w-3xl shadow-2xl max-h-[90vh] overflow-y-auto"
+                initial={{ scale: 0.8 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0.8 }}
+              >
+                <h3 className="text-xl font-bold mb-4 text-center border-b pb-2 border-[var(--color-bg-gray)]">
+                  {t("orders.detailsTitle")}
+                </h3>
                 
 <div className="grid sm:grid-cols-2 gap-4 text-sm leading-relaxed break-words">
   {[{
@@ -666,128 +645,137 @@ const searchFields = [
     </p>
   ))}
 </div>
-        <div className="mt-6">
-                          <strong className="block mb-4 text-[var(--color-text)] text-lg">
-                            {t("orders.fields.products")}
-                          </strong>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                            {selectedOrder.products.map((item, idx) => {
-                              const colorObj = getFullColorData(item.selectedColor);
-                              
-                              return (
-                                <div
-                                  key={idx}
-                                  className="flex gap-4 items-center bg-[var(--color-bg-gray)] p-4 rounded-lg border border-[var(--color-accent)] cursor-pointer hover:text-white hover:bg-[var(--color-accent)] transition"
-                                  onClick={() => {
-                                    if (item.product?._id) {
-                                      navigate(`/product/${item.product._id}`);
-                                    } else {
-                                      toast.error(t("orders.fields.noImage"));
-                                    }
-                                  }}
-                                >
-                                  {/* عرض صورة المنتج */}
-                                  {item.product?.images && item.product.images.length > 0 ? (
-                                    <img
-                                      src={item.product.images[0]}
-                                      alt={item.product.name}
-                                      className="w-16 h-16 rounded-lg object-cover border border-gray-500"
-                                    />
-                                  ) : (
-                                    <div className="w-16 h-16 rounded-lg bg-gray-600 flex items-center justify-center text-xs border border-gray-500">
-                                      {t("orders.fields.noImage")}
-                                    </div>
-                                  )}
+      <div className="mt-6">
+                  <strong className="block mb-4 text-[var(--color-text)] text-lg">
+                    {t("orders.fields.products")}
+                  </strong>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    {Array.isArray(selectedOrder.products) && selectedOrder.products.map((item, idx) => {
+                      const colorObj = getFullColorData(item?.selectedColor);
+                      
+                      return (
+                        <div
+                          key={idx}
+                          className="flex gap-4 items-center bg-[var(--color-bg-gray)] p-4 rounded-lg border border-[var(--color-accent)] cursor-pointer hover:text-white hover:bg-[var(--color-accent)] transition"
+                          onClick={() => {
+                            if (item?.product?._id) {
+                              navigate(`/product/${item.product._id}`);
+                            } else {
+                              toast.error(t("orders.fields.noImage"));
+                            }
+                          }}
+                        >
+                          {/* عرض صورة المنتج */}
+                          {item?.product?.images && item.product.images.length > 0 ? (
+                            <img
+                              src={item.product.images[0]}
+                              alt={item.product.name}
+                              className="w-16 h-16 rounded-lg object-cover border border-gray-500"
+                            />
+                          ) : (
+                            <div className="w-16 h-16 rounded-lg bg-gray-600 flex items-center justify-center text-xs border border-gray-500">
+                              {t("orders.fields.noImage")}
+                            </div>
+                          )}
 
-                                  <div className="flex flex-col flex-1">
-                                    <p className="font-semibold text-base leading-tight">
-                                      {item.product?.name || t("orders.fields.product")}{" "}
-                                      <span className="font-normal">× {item.quantity}</span>
-                                    </p>
+                          <div className="flex flex-col flex-1">
+                            <p className="font-semibold text-base leading-tight">
+                              {item?.product?.name || t("orders.fields.product")}{" "}
+                              <span className="font-normal">× {item?.quantity || 1}</span>
+                            </p>
 
-                                    <p className="text-sm font-bold mt-1">
-                                      {item.price.toLocaleString()} {t("analytics.revenueUnit")}
-                                    </p>
+                            <p className="text-sm font-bold mt-1">
+                              {(item?.price || 0).toLocaleString()} {t("analytics.revenueUnit")}
+                            </p>
 
-                                    {/* عرض الحجم واللون */}
-                                    <div className="flex items-center gap-2 mt-2 flex-wrap">
-                                      {item.selectedSize && (
-                                        <span className="text-xs font-semibold bg-gray-700 text-white px-3 py-1 rounded-full">
-                                          {item.selectedSize}
-                                        </span>
-                                      )}
-                                      {colorObj && (
-                                        <div className="flex items-center gap-1">
-                                          <span
-                                            className="inline-block w-5 h-5 rounded-full border border-gray-300"
-                                            style={{ backgroundColor: colorObj.hex }}
-                                            title={colorObj.name}
-                                          />
-                                          <span className="text-xs">
-                                            {colorObj.name}
-                                          </span>
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
+                            {/* عرض الحجم واللون */}
+                            <div className="flex items-center gap-2 mt-2 flex-wrap">
+                              {item?.selectedSize && (
+                                <span className="text-xs font-semibold bg-gray-700 text-white px-3 py-1 rounded-full">
+                                  {item.selectedSize}
+                                </span>
+                              )}
+                              {colorObj && (
+                                <div className="flex items-center gap-1">
+                                  <span
+                                    className="inline-block w-5 h-5 rounded-full border border-gray-300"
+                                    style={{ backgroundColor: colorObj.hex }}
+                                    title={colorObj.name}
+                                  />
+                                  <span className="text-xs">
+                                    {colorObj.name}
+                                  </span>
                                 </div>
-                              );
-                            })}
+                              )}
+                            </div>
                           </div>
                         </div>
-
-                  <div className="flex justify-center mt-6">
-                    <button
-                      onClick={() => setSelectedOrder(null)}
-                      className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded font-semibold"
-                    >
-                      {t("orders.fields.close")}
-                    </button>
+                      );
+                    })}
                   </div>
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>,
-          document.body
-        )}
-        <AnimatePresence>
-          {showPopup && (
-            <motion.div
-              className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50"
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            >
-              <motion.div
-                className="bg-[var(--color-bg)] p-6 rounded-xl text-[var(--color-text-secondary)] w-[90%] max-w-md shadow-2xl border border-[var(--color-bg-gray)]"
-                initial={{ scale: 0.8 }} animate={{ scale: 1 }} exit={{ scale: 0.8 }}
-              >
-                <h3 className="text-xl font-bold mb-4 text-center">
-                  {t("orders.confirmDelete")}
-                </h3>
-                <p className="mb-6 text-center">
-                  {selectedOrderId
-                    ? t("orders.confirmSingle")
-                    : t("orders.confirmMultiple", { count: selectedOrders.length })}
-                </p>
-                <div className="flex justify-center gap-4">
+                  
+                  {/* 🔥 رسالة إذا لم توجد منتجات */}
+                  {(!Array.isArray(selectedOrder.products) || selectedOrder.products.length === 0) && (
+                    <p className="text-center text-gray-500 py-4">
+                      {t("orders.noProducts")}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex justify-center mt-6">
                   <button
-                    onClick={handleDelete}
-                    className="bg-red-600 text-white hover:bg-red-700 px-5 py-2 rounded font-semibold transition"
+                    onClick={() => setSelectedOrder(null)}
+                    className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded font-semibold"
                   >
-                    {t("orders.confirmYes")}
-                  </button>
-                  <button
-                    onClick={() => { setShowPopup(false); setSelectedOrderId(null); }}
-                    className="bg-gray-700 text-white hover:bg-gray-600 px-5 py-2 rounded font-semibold transition"
-                  >
-                    {t("orders.confirmCancel")}
+                    {t("orders.fields.close")}
                   </button>
                 </div>
               </motion.div>
             </motion.div>
           )}
-    </AnimatePresence>
+        </AnimatePresence>,
+        document.body
+      )}
+
+      {/* نافذة تأكيد الحذف */}
+      <AnimatePresence>
+        {showPopup && (
+          <motion.div
+            className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="bg-[var(--color-bg)] p-6 rounded-xl text-[var(--color-text-secondary)] w-[90%] max-w-md shadow-2xl border border-[var(--color-bg-gray)]"
+              initial={{ scale: 0.8 }} animate={{ scale: 1 }} exit={{ scale: 0.8 }}
+            >
+              <h3 className="text-xl font-bold mb-4 text-center">
+                {t("orders.confirmDelete")}
+              </h3>
+              <p className="mb-6 text-center">
+                {selectedOrderId
+                  ? t("orders.confirmSingle")
+                  : t("orders.confirmMultiple", { count: selectedOrders.length })}
+              </p>
+              <div className="flex justify-center gap-4">
+                <button
+                  onClick={handleDelete}
+                  className="bg-red-600 text-white hover:bg-red-700 px-5 py-2 rounded font-semibold transition"
+                >
+                  {t("orders.confirmYes")}
+                </button>
+                <button
+                  onClick={() => { setShowPopup(false); setSelectedOrderId(null); }}
+                  className="bg-gray-700 text-white hover:bg-gray-600 px-5 py-2 rounded font-semibold transition"
+                >
+                  {t("orders.confirmCancel")}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
-	);
+  );
 };
 
 export default OrderList;
