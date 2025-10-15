@@ -42,21 +42,39 @@ const OrderList = () => {
   const [sortOrder, setSortOrder] = useState('desc');
   const [stateFilter, setStateFilter] = useState('all');
   const [clientAskforPhone, setClientAskforPhone] = useState(false);
-  const [hasLongPressed, setHasLongPressed] = useState(false);
   
-  // 🔥 إصلاح: فلترة وترتيب الطلبات مع معالجة القيم غير المعرفة
+  // 🔥 إضافة console.log للتحقق من البيانات
+  useEffect(() => {
+    console.log("📊 حالة الطلبات:", {
+      totalOrders: orders?.length,
+      orders: orders
+    });
+  }, [orders]);
+
+  // 🔥 فلترة وترتيب الطلبات
   const filteredSortedOrders = useMemo(() => {
+    console.log("🔍 بدء فلترة الطلبات:", {
+      total: orders?.length,
+      statusFilter,
+      stateFilter,
+      searchQuery,
+      clientAskforPhone
+    });
+    
     let result = Array.isArray(orders) ? [...orders] : [];
+    console.log("📋 الطلبات الأولية:", result.length);
 
     // فلترة حسب الحالة
     if (statusFilter !== 'all') {
       const isConfirmed = statusFilter === 'confirmed';
       result = result.filter(order => order?.isConfirmed === isConfirmed);
+      console.log(`🔄 بعد فلترة الحالة (${statusFilter}):`, result.length);
     }
 
     // فلترة حسب الولاية
     if (stateFilter !== 'all') {
       result = result.filter(order => order?.wilaya === stateFilter);
+      console.log(`🗺️ بعد فلترة الولاية (${stateFilter}):`, result.length);
     }
 
     // فلترة بحث حسب الحقل
@@ -65,10 +83,12 @@ const OrderList = () => {
       result = result.filter(order =>
         (order?.[field] ?? '').toString().toLowerCase().includes(searchQuery.toLowerCase())
       );
+      console.log(`🔎 بعد البحث (${field}):`, result.length);
     }
 
     if (clientAskforPhone) {
       result = result.filter(order => order?.isAskForPhone);
+      console.log("📞 بعد فلترة طلب الهاتف:", result.length);
     }
 
     // ترتيب حسب التاريخ
@@ -78,6 +98,7 @@ const OrderList = () => {
       return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
     });
 
+    console.log("✅ الطلبات بعد الترتيب:", result.length);
     return result;
   }, [orders, statusFilter, sortOrder, searchQuery, searchTypeIndex, stateFilter, clientAskforPhone]);
 
@@ -137,6 +158,7 @@ const OrderList = () => {
     const loadData = async () => {
       setIsLoading(true);
       try {
+        console.log("🚀 بدء تحميل الطلبات...");
         await fetchOrders();
       } catch (error) {
         console.error("❌ خطأ في جلب الطلبات:", error);
@@ -194,9 +216,38 @@ const OrderList = () => {
     { key: 'phoneNumber', label: t("orders.phoneNumber") }
   ];
 
+  // 🔥 عرض حالة التحميل
   if (isLoading) {
+    console.log("⏳ جاري التحميل...");
     return <LoadingSpinner />;
   }
+
+  // 🔥 عرض حالة عدم وجود طلبات
+  if (!Array.isArray(orders) || orders.length === 0) {
+    console.log("📭 لا توجد طلبات لعرضها");
+    return (
+      <motion.div
+        className="bg-[var(--color-bg-gray)] text-[var(--color-text-secondary)] shadow-xl rounded-xl p-8 text-center"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        <h3 className="text-xl font-bold mb-4">{t("orders.noOrders")}</h3>
+        <p className="text-gray-500 mb-4">لا توجد طلبات في النظام</p>
+        <button 
+          onClick={fetchOrders}
+          className="bg-[var(--color-accent)] text-white px-4 py-2 rounded hover:bg-[var(--color-accent-hover)]"
+        >
+          إعادة تحميل الطلبات
+        </button>
+      </motion.div>
+    );
+  }
+
+  console.log("🎯 عرض الطلبات:", {
+    total: orders.length,
+    filtered: filteredSortedOrders.length
+  });
 
   return (
     <motion.div
@@ -243,7 +294,7 @@ const OrderList = () => {
           value={stateFilter}
           onChange={(e) => setStateFilter(e.target.value)}
           className="flex-none shadow-xl rounded px-3 py-2.5 bg-[var(--color-bg)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-hover)]"
-            >
+        >
           <option value="all">كل الولايات</option>
           <option value="01 - أدرار">01 - أدرار</option>
           <option value="02 - الشلف">02 - الشلف</option>
@@ -304,13 +355,13 @@ const OrderList = () => {
           <option value="57 - المغير">57 - المغير</option>
           <option value="58 - المنيعة">58 - المنيعة</option>
         </select>
-        <button
+                <button
           onClick={() => setSortOrder(sortOrder === 'desc'? 'asc': 'desc')}
           className={`flex-none w-20 rounded-md shadow-xl transition ${!isRTL ? "text-sm py-2.5" : "py-2"} ${
             sortOrder !== 'desc'? "bg-[var(--color-accent-hover)]": "bg-[var(--color-bg)]"
           }`}
         >
-        {t("orders.lastFirst")}
+          {t("orders.lastFirst")}
         </button>
         
         <button
@@ -319,92 +370,95 @@ const OrderList = () => {
             clientAskforPhone? "bg-[var(--color-accent-hover)]": "bg-[var(--color-bg)]"
           }`}
         >
-          {/* ممكن تضيف أيقونة هنا */}
           <span>{t("orders.requireNumber")}</span>
         </button>
 
-      <div className="flex overflow-hidden rounded-lg shadow-xl bg-[var(--color-bg-gray)] border-2 border-[var(--color-accent-hover)]">
-  <input
-    type="text"
-    value={searchQuery}
-    onChange={(e) => setSearchQuery(e.target.value)}
-    placeholder={`${t("orders.searchBy")} ${searchFields[searchTypeIndex].label}`}
-    className="flex-grow min-w-[200px] bg-[var(--color-bg)] placeholder-gray-400 px-4 py-2 focus:outline-none focus:ring-0"
-    style={{ border: 'none' }}
-  />
-  <button
-    onClick={() => setSearchTypeIndex((prev) => (prev + 1) % searchFields.length)}
-    className="w-30 bg-[var(--color-accent-hover)] text-white px-4 py-2 transition whitespace-nowrap rounded-none"
-    style={{ border: 'none' }}
-    title={t("orders.changeSearch")}
-  >
-    {searchFields[searchTypeIndex].label}
-  </button>
-</div>
-
+        <div className="flex overflow-hidden rounded-lg shadow-xl bg-[var(--color-bg-gray)] border-2 border-[var(--color-accent-hover)]">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={`${t("orders.searchBy")} ${searchFields[searchTypeIndex].label}`}
+            className="flex-grow min-w-[200px] bg-[var(--color-bg)] placeholder-gray-400 px-4 py-2 focus:outline-none focus:ring-0"
+            style={{ border: 'none' }}
+          />
+          <button
+            onClick={() => setSearchTypeIndex((prev) => (prev + 1) % searchFields.length)}
+            className="w-30 bg-[var(--color-accent-hover)] text-white px-4 py-2 transition whitespace-nowrap rounded-none"
+            style={{ border: 'none' }}
+            title={t("orders.changeSearch")}
+          >
+            {searchFields[searchTypeIndex].label}
+          </button>
+        </div>
       </div>
 
-        {selectedOrders.length > 0 && (
-          <motion.div 
-            className="bg-[var(--color-bg-opacity)] p-3 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-3"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.1 }}
-          >
-                <p className="text-sm whitespace-nowrap">
-                  {t("orders.selected", { count: selectedOrders.length })}
-                </p>
-                
-                <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-end">
-                  <motion.button
-                    onClick={toggleConfirmation}
-                    className={`px-3 py-1.5 rounded text-sm flex items-center text-white gap-1 ${
-                      hasMixedStatus
-                        ? "bg-gray-500 cursor-not-allowed"
-                        : allConfirmed
-                          ? "bg-yellow-600 hover:bg-yellow-700"
-                          : "bg-emerald-600 hover:bg-emerald-700"
-                    }`}
-                    disabled={hasMixedStatus}
-                    whileHover={{ scale: hasMixedStatus ? 1 : 1.05 }}
-                    whileTap={{ scale: hasMixedStatus ? 1 : 0.95 }}
-                  >
-                    <CheckCircle className="h-4 w-4" />
-                    <span className="hidden xs:inline">
-                      {allConfirmed
-                        ? t("orders.unconfirmSelected")
-                        : t("orders.confirmSelected")
-                      }
-                    </span>
-                  </motion.button>
+      {/* عرض عدد الطلبات المفلترة */}
+      <div className="px-4 py-2 text-sm text-gray-500">
+        عرض {filteredSortedOrders.length} من أصل {orders.length} طلب
+      </div>
 
-                  <motion.button
-                    onClick={() => setShowPopup(true)}
-                    className="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded text-sm flex items-center gap-1"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Trash className="h-4 w-4" />
-                    <span className="hidden xs:inline">{t("orders.deleteSelected")}</span>
-                  </motion.button>
+      {selectedOrders.length > 0 && (
+        <motion.div 
+          className="bg-[var(--color-bg-opacity)] p-3 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-3"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.1 }}
+        >
+          <p className="text-sm whitespace-nowrap">
+            {t("orders.selected", { count: selectedOrders.length })}
+          </p>
+          
+          <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-end">
+            <motion.button
+              onClick={toggleConfirmation}
+              className={`px-3 py-1.5 rounded text-sm flex items-center text-white gap-1 ${
+                hasMixedStatus
+                  ? "bg-gray-500 cursor-not-allowed"
+                  : allConfirmed
+                    ? "bg-yellow-600 hover:bg-yellow-700"
+                    : "bg-emerald-600 hover:bg-emerald-700"
+              }`}
+              disabled={hasMixedStatus}
+              whileHover={{ scale: hasMixedStatus ? 1 : 1.05 }}
+              whileTap={{ scale: hasMixedStatus ? 1 : 0.95 }}
+            >
+              <CheckCircle className="h-4 w-4" />
+              <span className="hidden xs:inline">
+                {allConfirmed
+                  ? t("orders.unconfirmSelected")
+                  : t("orders.confirmSelected")
+                }
+              </span>
+            </motion.button>
 
-                  <motion.button
-                    onClick={() => {
-                      setSelectedOrders([]);
-                      setSelectAll(false);
-                    }}
-                    className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded text-sm flex items-center gap-1"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <XCircle className="h-4 w-4" />
-                    <span className="hidden xs:inline">{t("orders.cancelSelection")}</span>
-                  </motion.button>
-                </div>
-              </motion.div>
-          )}
+            <motion.button
+              onClick={() => setShowPopup(true)}
+              className="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded text-sm flex items-center gap-1"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Trash className="h-4 w-4" />
+              <span className="hidden xs:inline">{t("orders.deleteSelected")}</span>
+            </motion.button>
 
-            <div className="w-full overflow-x-auto rounded-b-xl scrollbar-x-hide mt-1">
+            <motion.button
+              onClick={() => {
+                setSelectedOrders([]);
+                setSelectAll(false);
+              }}
+              className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded text-sm flex items-center gap-1"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <XCircle className="h-4 w-4" />
+              <span className="hidden xs:inline">{t("orders.cancelSelection")}</span>
+            </motion.button>
+          </div>
+        </motion.div>
+      )}
+
+      <div className="w-full overflow-x-auto rounded-b-xl scrollbar-x-hide mt-1">
         <table className="min-w-full table-auto divide-y select-none divide-[var(--color-bg-gray)] text-xs">
           <thead className="bg-[var(--color-bg)] text-center">
             <tr>
@@ -458,20 +512,17 @@ const OrderList = () => {
                 }}
                 className={`transition text-center duration-200 ${
                   order?.isAskForPhone && !order?.deliveryPhone && !selectedOrders.includes(order?._id) ? 'bg-yellow-900/40' : ''
-                } ${selectedOrders.includes(order?._id) ? 'bg-green-900/40' : 'hover:bg-[var(--color-bg-opacity)]'}`}>
-
+                } ${selectedOrders.includes(order?._id) ? 'bg-green-900/40' : 'hover:bg-[var(--color-bg-opacity)]'}`}
+              >
                 <td className="break-words px-2 py-2">
                   {searchTypeIndex === 0 ? highlightText(order?.orderNumber, searchQuery, true) : order?.orderNumber}
                 </td>
-
                 <td className="break-words px-2 py-2">
                   {searchTypeIndex === 1 ? highlightText(order?.fullName, searchQuery, true) : order?.fullName}
                 </td>
-
                 <td className="break-words px-2 py-2">
                   {searchTypeIndex === 2 ? highlightText(order?.phoneNumber, searchQuery, true) : order?.phoneNumber}
                 </td>
-
                 <td className="break-words px-2 py-2">{order?.wilaya}</td>
                 <td className="break-words px-2 py-2">
                   <motion.div
@@ -498,13 +549,6 @@ const OrderList = () => {
                 </td>
               </tr>
             ))}
-            {(!Array.isArray(orders) || orders.length === 0) && (
-              <tr>
-                <td colSpan={9} className="text-center py-8">
-                  {t("orders.noOrders")}
-                </td>
-              </tr>
-            )}
           </tbody>
         </table>
       </div>
