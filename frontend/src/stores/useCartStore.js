@@ -98,32 +98,33 @@ export const useCartStore = create(
         get().calculateTotals();
       },
 
-      applyCoupon: async (code) => {
-        try {
-          const response = await axios.post("/coupons/validate", { code });
-          const coupon = response.data;
-          set({ coupon, isCouponApplied: true });
-          get().calculateTotals();
-        } catch (err) {
-          toast.error(err.response?.data?.message || "Error validating coupon");
-        }
-      },
+      // في useCartStore.js
+applyCoupon: async (code) => {
+  try {
+    const response = await axios.post("/api/coupons/validate", { code }); // 🔥 أضف /api
+    const coupon = response.data;
+    set({ coupon, isCouponApplied: true });
+    get().calculateTotals();
+  } catch (err) {
+    toast.error(err.response?.data?.message || "Error validating coupon");
+  }
+},
 
-      getMyCoupon: async () => {
-        const { coupon, isCouponApplied } = get();
+getMyCoupon: async () => {
+  const { coupon, isCouponApplied } = get();
 
-        if (coupon && isCouponApplied) {
-          try {
-            const response = await axios.post("/coupons/validate", { code: coupon.code });
-            const validCoupon = response.data;
-            set({ coupon: validCoupon, isCouponApplied: true });
-            get().calculateTotals();
-          } catch (err) {
-            set({ coupon: null, isCouponApplied: false });
-            get().calculateTotals();
-          }
-        }
-      },
+  if (coupon && isCouponApplied) {
+    try {
+      const response = await axios.post("/api/coupons/validate", { code: coupon.code }); // 🔥 أضف /api
+      const validCoupon = response.data;
+      set({ coupon: validCoupon, isCouponApplied: true });
+      get().calculateTotals();
+    } catch (err) {
+      set({ coupon: null, isCouponApplied: false });
+      get().calculateTotals();
+    }
+  }
+},
 
       removeCoupon: () => {
         set({ coupon: null, isCouponApplied: false });

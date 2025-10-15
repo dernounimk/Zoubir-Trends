@@ -7,21 +7,30 @@ const axiosInstance = axios.create({
   timeout: 30000,
 });
 
-// معالجة الطلبات
+// 🔥 إضافة /api تلقائياً لجميع ال requests
 axiosInstance.interceptors.request.use(
   (config) => {
+    // أضف /api تلقائياً إذا لم تكن موجودة ولم تكن ملفات static
+    if (config.url && 
+        !config.url.startsWith('/api/') && 
+        !config.url.startsWith('/auth/') && 
+        config.url !== '/health' &&
+        !config.url.includes('.')) {
+      config.url = '/api' + config.url;
+    }
+    
     const { accessToken } = useAdminAuthStore.getState();
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`;
     }
     
-    console.log(`🔧 Request: ${config.method?.toUpperCase()} ${config.url}`, config.data);
+    console.log(`🔧 Request: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`, config.data);
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// معالجة الاستجابات
+// معالجة أخطاء التوكن
 axiosInstance.interceptors.response.use(
   (response) => {
     console.log(`✅ Response: ${response.status} ${response.config.url}`, response.data);
