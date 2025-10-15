@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Trash, Star, Eye, Pencil, Trash2, InstagramIcon, X,MessageSquare } from "lucide-react";
+import { Trash, Star, Eye, Pencil, Trash2, InstagramIcon, X, MessageSquare } from "lucide-react";
 import { useProductStore } from "../stores/useProductStore";
 import toast from "react-hot-toast";
 import { useState, useEffect } from "react";
@@ -8,7 +8,7 @@ import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import LoadingSpinner from "./LoadingSpinner";
 import dayjs from "dayjs";
-  import axiosInstance from "../lib/axios";
+import axiosInstance from "../lib/axios";
 import axios from "axios";
 
 const iconButtonClass = "p-2 rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-emerald-500";
@@ -37,53 +37,97 @@ const ProductsList = () => {
   const [filterDiscount, setFilterDiscount] = useState(false);
   const [filterFeature, setFilterFeature] = useState(false);
 
+  // 🔥 إصلاح: فلترة المنتجات مع معالجة القيم غير المعرفة
+  const filteredProducts = products.filter(product => {
+    if (!product) return false;
+    
+    // فلترة حسب الاسم مع تجاهل حالة الأحرف
+    const matchesSearch = product.name?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false;
+    
+    // فلترة حسب التصنيف
+    const matchesCategory = !selectedCategory || 
+      product.category?._id === selectedCategory || 
+      product.category === selectedCategory;
+    
+    // فلترة حسب وجود خصم
+    const matchesDiscount = !filterDiscount || 
+      (product.priceAfterDiscount && product.priceAfterDiscount > 0);
 
-const filteredProducts = products.filter(product => {
-  // فلترة حسب الاسم مع تجاهل حالة الأحرف
-  const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
-  
-  // فلترة حسب التصنيف
-  const matchesCategory =!selectedCategory || product.category?._id === selectedCategory || product.category === selectedCategory;
-  
-  // فلترة حسب وجود خصم
-  const matchesDiscount =!filterDiscount || (product.priceAfterDiscount && product.priceAfterDiscount > 0);
+    const matchesFeature = !filterFeature || product.isFeatured;
+    
+    return matchesSearch && matchesCategory && matchesDiscount && matchesFeature;
+  });
 
-  const matchesFeature =!filterFeature || product.isFeatured;
-  
-  return matchesSearch && matchesCategory && matchesDiscount && matchesFeature;
-});
+  const highlightText = (text, highlight) => {
+    if (!highlight || !text) return text;
 
+    const regex = new RegExp(`(${highlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    const parts = text.split(regex);
 
-const highlightText = (text, highlight) => {
-  if (!highlight) return text;
+    return parts.map((part, i) =>
+      regex.test(part) ? (
+        <span key={i} className="bg-yellow-400 text-black rounded px-0.5">{part}</span>
+      ) : (
+        part
+      )
+    );
+  };
 
-  const regex = new RegExp(`(${highlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-  const parts = text.split(regex);
-
-  return parts.map((part, i) =>
-    regex.test(part)? (
-      <span key={i} className="bg-yellow-400 text-black rounded px-0.5">{part}</span>
-    ): (
-      part
-    )
-  );
-};
-
+  // 🔥 إصلاح: جلب الإعدادات مع معالجة الأخطاء
   useEffect(() => {
     const fetchSettings = async () => {
       try {
+        console.log("🔄 جلب الإعدادات للمنتجات...");
         const res = await axios.get("/api/settings");
         const data = res.data;
 
-        setCategories(data.categories);
-        setSizesLetters(data.sizes.filter((s) => s.type === "letter").map((s) => s.name));
-        setSizesNumbers(data.sizes.filter((s) => s.type === "number").map((s) => s.name));
-        setColorsList(data.colors);
+        console.log("📊 بيانات الإعدادات المستلمة:", {
+          sizes: data.sizes,
+          categories: data.categories,
+          colors: data.colors
+        });
 
-        setIsLoading(false)
+        // 🔥 معالجة البيانات غير المعرفة
+        const safeSizes = Array.isArray(data.sizes) ? data.sizes : [];
+        const safeCategories = Array.isArray(data.categories) ? data.categories : [];
+        const safeColors = Array.isArray(data.colors) ? data.colors : [];
+
+        setCategories(safeCategories);
+        
+        // 🔥 تصفية المقاسات بحروف
+        const letters = safeSizes
+          .filter(s => s && s.type === "letter" && s.name)
+          .map(s => s.name)
+          .filter(Boolean);
+        
+        // 🔥 تصفية المقاسات بأرقام  
+        const numbers = safeSizes
+          .filter(s => s && s.type === "number" && s.name)
+          .map(s => s.name)
+          .filter(Boolean);
+        
+        setSizesLetters(letters);
+        setSizesNumbers(numbers);
+        setColorsList(safeColors);
+
+        console.log("✅ الإعدادات المعالجة:", {
+          letters: letters.length,
+          numbers: numbers.length,
+          categories: safeCategories.length,
+          colors: safeColors.length
+        });
+
       } catch (error) {
-        console.error("خطأ في جلب الإعدادات:", error);
-        setIsLoading(false)
+        console.error("❌ خطأ في جلب الإعدادات:", error);
+        console.error("تفاصيل الخطأ:", error.response?.data || error.message);
+        
+        // 🔥 تعيين قيم افتراضية فارغة في حالة الخطأ
+        setCategories([]);
+        setSizesLetters([]);
+        setSizesNumbers([]);
+        setColorsList([]);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchSettings();
@@ -93,63 +137,71 @@ const highlightText = (text, highlight) => {
     fetchAllProducts();
   }, [fetchAllProducts]);
 
-const toggleSelection = (field, value) => {
-  setEditingProduct((prev) => {
-    if (!prev) return prev;
-    const current = prev[field] || [];
-    
-    if (field === 'colors') {
-      // التعامل مع الألوان ككائنات
-      const exists = current.some(c => 
-        (typeof c === 'object' && c._id === value._id) || 
-        (typeof c === 'string' && c === value._id)
-      );
+  // 🔥 إصلاح: toggleSelection مع معالجة القيم غير المعرفة
+  const toggleSelection = (field, value) => {
+    setEditingProduct((prev) => {
+      if (!prev) return prev;
       
-      if (exists) {
-        return { 
-          ...prev, 
-          [field]: current.filter(c => 
-            (typeof c === 'object' ? c._id !== value._id : c !== value._id)
-          ) 
-        };
+      const current = Array.isArray(prev[field]) ? prev[field] : [];
+      
+      if (field === 'colors') {
+        // التعامل مع الألوان ككائنات
+        const exists = current.some(c => 
+          (typeof c === 'object' && c._id === value._id) || 
+          (typeof c === 'string' && c === value._id)
+        );
+        
+        if (exists) {
+          return { 
+            ...prev, 
+            [field]: current.filter(c => 
+              (typeof c === 'object' ? c._id !== value._id : c !== value._id)
+            ) 
+          };
+        } else {
+          return { ...prev, [field]: [...current, value] };
+        }
       } else {
-        return { ...prev, [field]: [...current, value] };
+        // التعامل مع المقاسات كنصوص
+        if (current.includes(value)) {
+          return { ...prev, [field]: current.filter(v => v !== value) };
+        } else {
+          return { ...prev, [field]: [...current, value] };
+        }
       }
-    } else {
-      // التعامل مع المقاسات كنصوص
-      if (current.includes(value)) {
-        return { ...prev, [field]: current.filter(v => v !== value) };
-      } else {
-        return { ...prev, [field]: [...current, value] };
-      }
-    }
-  });
-};
+    });
+  };
 
   const openDeletePopup = (id) => {
     setSelectedProductId(id);
     setShowPopup(true);
   };
 
-const editProduct = (product) => {
-  // تحويل IDs الألوان إلى كائنات كاملة
-  const fullColors = product.colors?.map(colorId => 
-    colorsList.find(c => c._id == colorId) || colorId);
-  
-  // تحويل ID التصنيف إلى كائن كامل إذا كان ID فقط
-  const fullCategory = typeof product.category === 'string' ? 
-    categories.find(c => c._id === product.category) || product.category : 
-    product.category;
+  // 🔥 إصلاح: تحرير المنتج مع معالجة القيم غير المعرفة
+  const editProduct = (product) => {
+    if (!product) return;
+    
+    // تحويل IDs الألوان إلى كائنات كاملة
+    const fullColors = Array.isArray(product.colors) ? 
+      product.colors.map(colorId => 
+        colorsList.find(c => c._id == colorId) || colorId
+      ) : [];
+    
+    // تحويل ID التصنيف إلى كائن كامل إذا كان ID فقط
+    const fullCategory = typeof product.category === 'string' ? 
+      categories.find(c => c._id === product.category) || product.category : 
+      product.category;
 
-  const safeProduct = {
-    ...product,
-    category: fullCategory,
-    colors: fullColors || [],
-    sizes: product.sizes || []
+    const safeProduct = {
+      ...product,
+      category: fullCategory,
+      colors: fullColors,
+      sizes: Array.isArray(product.sizes) ? product.sizes : [],
+      images: Array.isArray(product.images) ? product.images : []
+    };
+    
+    setEditingProduct(safeProduct);
   };
-  
-  setEditingProduct(safeProduct);
-};
 
   const handleDelete = () => {
     if (selectedProductId) {
@@ -161,10 +213,12 @@ const editProduct = (product) => {
   };
 
   const handleUpdateProduct = async () => {
+    if (!editingProduct) return;
+    
     try {
       // تحويل الملفات الجديدة إلى Base64
-      const oldImages = editingProduct.images || [];
-      const newFiles = editingProduct.newImages || [];
+      const oldImages = Array.isArray(editingProduct.images) ? editingProduct.images : [];
+      const newFiles = Array.isArray(editingProduct.newImages) ? editingProduct.newImages : [];
 
       const fileToBase64 = (file) =>
         new Promise((resolve, reject) => {
@@ -181,8 +235,9 @@ const editProduct = (product) => {
       const payload = {
         ...editingProduct,
         category: editingProduct.category?._id || editingProduct.category,
-        colors: editingProduct.colors?.map(c => c._id || c),
-        sizes: editingProduct.sizes,
+        colors: Array.isArray(editingProduct.colors) ? 
+          editingProduct.colors.map(c => c._id || c) : [],
+        sizes: Array.isArray(editingProduct.sizes) ? editingProduct.sizes : [],
         images: allImages,
       };
 
@@ -207,48 +262,46 @@ const editProduct = (product) => {
       transition={{ duration: 0.8 }}
     >
 
-<div className="flex flex-wrap items-center gap-4 px-4 py-3 rounded-lg mt-2">
+      <div className="flex flex-wrap items-center gap-4 px-4 py-3 rounded-lg mt-2">
+        <button
+          onClick={() => setFilterDiscount(prev => !prev)}
+          className={`inline-flex gap-2 items-center cursor-pointer select-none rounded-md shadow-xl px-3 py-2 transition ${
+            filterDiscount ? "bg-[var(--color-accent-hover)]" : "bg-[var(--color-bg)]"
+          }`}
+          aria-pressed={filterDiscount}
+        >
+          <span>{t("productsList.onlyDiscounted")}</span>
+        </button>
 
-<button
-  onClick={() => setFilterDiscount(prev =>!prev)}
-  className={`inline-flex gap-2 items-center cursor-pointer select-none rounded-md shadow-xl px-3 py-2 transition ${
-    filterDiscount? "bg-[var(--color-accent-hover)]": "bg-[var(--color-bg)]"
-  }`}
-  aria-pressed={filterDiscount}
->
-  <span>{t("productsList.onlyDiscounted")}</span>
-</button>
+        <button
+          onClick={() => setFilterFeature(prev => !prev)}
+          className={`inline-flex gap-2 items-center cursor-pointer select-none rounded-md shadow-xl px-3 py-2 transition ${
+            filterFeature ? "bg-[var(--color-accent-hover)]" : "bg-[var(--color-bg)]"
+          }`}
+          aria-pressed={filterFeature}
+        >
+          <span>{t("productsList.onlyFeatured")}</span>
+        </button>
 
-<button
-  onClick={() => setFilterFeature(prev =>!prev)}
-  className={`inline-flex gap-2 items-center cursor-pointer select-none rounded-md shadow-xl px-3 py-2 transition ${
-    filterFeature? "bg-[var(--color-accent-hover)]": "bg-[var(--color-bg)]"
-  }`}
-  aria-pressed={filterFeature}
->
-  <span>{t("productsList.onlyFeatured")}</span>
-</button>
+        <select
+          value={selectedCategory}
+          onChange={e => setSelectedCategory(e.target.value)}
+          className="rounded-md border border-[var(--color-bg)] bg-[var(--color-bg)] px-4 py-2 shadow-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-hover)] transition"
+        >
+          <option value="">{t("productsList.allCategories")}</option>
+          {categories.map(cat => (
+            <option key={cat._id} value={cat._id} className="bg-[var(--color-bg)]">{cat.name}</option>
+          ))}
+        </select>
 
-  <select
-    value={selectedCategory}
-    onChange={e => setSelectedCategory(e.target.value)}
-    className="rounded-md border border-[var(--color-bg)] bg-[var(--color-bg)] px-4 py-2 shadow-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-hover)] transition"
-  >
-    <option value="">{t("productsList.allCategories")}</option>
-    {categories.map(cat => (
-      <option key={cat._id} value={cat._id} className="bg-[var(--color-bg)]">{cat.name}</option>
-    ))}
-  </select>
-
-    <input
-    type="text"
-    placeholder={t("productsList.searchPlaceholder")}
-    value={searchTerm}
-    onChange={e => setSearchTerm(e.target.value)}
-    className="flex-grow min-w-[200px] rounded-md bg-[var(--color-bg)] shadow-xl placeholder-gray-500 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-hover)] transition"
-  />
-</div>
-
+        <input
+          type="text"
+          placeholder={t("productsList.searchPlaceholder")}
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+          className="flex-grow min-w-[200px] rounded-md bg-[var(--color-bg)] shadow-xl placeholder-gray-500 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-hover)] transition"
+        />
+      </div>
 
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-[var(--color-bg-gray)] text-xs">
@@ -269,7 +322,7 @@ const editProduct = (product) => {
             </tr>
           </thead>
           <tbody className="bg-[var(--color-bg-gray)] divide-y divide-[var(--color-bg)]">
-            {filteredProducts?.map((product) => (
+            {Array.isArray(filteredProducts) && filteredProducts.map((product) => (
               <tr key={product._id} className="hover:bg-[var(--color-bg-opacity)]">
                 {/* خلية اسم المنتج */}
                 <td className="px-2 py-2 text-center">
@@ -387,7 +440,7 @@ const editProduct = (product) => {
                 </td>
               </tr>
             ))}
-            {products.length === 0 && (
+            {(!Array.isArray(products) || products.length === 0) && (
               <tr>
                 <td colSpan={9} className="text-center py-8">
                   {t("productsList.noProducts")}
@@ -438,7 +491,7 @@ const editProduct = (product) => {
                   </label>
                   <input
                     type="text"
-                    value={editingProduct.name}
+                    value={editingProduct.name || ''}
                     onChange={(e) =>
                       setEditingProduct({ ...editingProduct, name: e.target.value })
                     }
@@ -521,9 +574,10 @@ const editProduct = (product) => {
                   </label>
                   <div className="flex flex-wrap gap-2">
                     {colorsList.map((colorObj) => {
-                      const isSelected = editingProduct.colors?.some(c => 
-                        (typeof c === 'object' ? c._id === colorObj._id : c === colorObj._id)
-                      );
+                      const isSelected = Array.isArray(editingProduct.colors) && 
+                        editingProduct.colors.some(c => 
+                          (typeof c === 'object' ? c._id === colorObj._id : c === colorObj._id)
+                        );
                       
                       return (
                         <button
@@ -576,7 +630,7 @@ const editProduct = (product) => {
                         key={size}
                         onClick={() => toggleSelection("sizes", size)}
                         className={`px-3 py-1 rounded-md border ${
-                          editingProduct.sizes?.includes(size)
+                          Array.isArray(editingProduct.sizes) && editingProduct.sizes.includes(size)
                             ? "bg-[var(--color-accent)] border-[var(--color-accent-hover)] text-white"
                             : "bg-[var(--color-bg-gray)] border-[var(--color-accent)]"
                         }`}
@@ -609,7 +663,7 @@ const editProduct = (product) => {
 
                   {/* عرض الصور الحالية */}
                   <div className="flex gap-3 mt-3 flex-wrap">
-                    {editingProduct.images?.map((img, idx) => (
+                    {Array.isArray(editingProduct.images) && editingProduct.images.map((img, idx) => (
                       <div key={idx} className="relative">
                         <img
                           src={img}
@@ -640,7 +694,7 @@ const editProduct = (product) => {
                     {t("productEditForm.description")}
                   </label>
                   <textarea
-                    value={editingProduct.description}
+                    value={editingProduct.description || ''}
                     onChange={(e) =>
                       setEditingProduct({ ...editingProduct, description: e.target.value })
                     }
