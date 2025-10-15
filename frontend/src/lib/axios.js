@@ -1,3 +1,4 @@
+// lib/axios.js
 import axios from "axios";
 import { useAdminAuthStore } from "../stores/useAdminAuthStore";
 
@@ -6,10 +7,10 @@ const axiosInstance = axios.create({
   timeout: 15000,
 });
 
-// 🔥 إصلاح تلقائي لجميع الـ routes
+// 🔥 إضافة /api تلقائياً لجميع ال requests
 axiosInstance.interceptors.request.use(
   (config) => {
-    // أضف /api تلقائياً لجميع الـ routes ما عدا الاستثناءات
+    // أضف /api تلقائياً إذا لم تكن موجودة
     if (config.url && 
         !config.url.startsWith('/api/') && 
         !config.url.startsWith('/auth/') && 
@@ -23,6 +24,7 @@ axiosInstance.interceptors.request.use(
       config.headers.Authorization = `Bearer ${accessToken}`;
     }
     
+    console.log(`🔧 Request: ${config.method?.toUpperCase()} ${config.url}`, config.data);
     return config;
   },
   (error) => Promise.reject(error)
@@ -30,8 +32,13 @@ axiosInstance.interceptors.request.use(
 
 // معالجة أخطاء التوكن
 axiosInstance.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log(`✅ Response: ${response.status} ${response.config.url}`, response.data);
+    return response;
+  },
   async (error) => {
+    console.log(`❌ Error: ${error.response?.status} ${error.config?.url}`, error.response?.data);
+    
     const originalRequest = error.config;
     
     if (error.response?.status === 401 && !originalRequest._retry) {

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PlusCircle, Loader, EyeOff, Eye, Trash2, Copy } from "lucide-react";
 import toast from "react-hot-toast";
-import axios from "axios";
+import axios from "../lib/axios"; // 🔥 استخدم axios المخصصة
 import LoadingSpinner from "./LoadingSpinner";
 import dayjs from "dayjs";
 import { useTranslation } from "react-i18next";
@@ -25,9 +25,9 @@ const CouponManager = () => {
   const fetchCoupons = async () => {
     try {
       console.log("🔄 جلب الكوبونات...");
-      const res = await axios.get("/api/coupons/all");
+      const res = await axios.get("/coupons/all"); // 🔥 بدون /api لأن axios يضيفها تلقائياً
       
-      // 🔥 إصلاح: معالجة البيانات القادمة من السيرفر
+      // 🔥 معالجة البيانات القادمة من السيرفر
       const couponsData = Array.isArray(res.data) ? res.data : [];
       
       console.log("✅ الكوبونات المستلمة:", couponsData);
@@ -35,10 +35,9 @@ const CouponManager = () => {
     } catch (err) {
       console.error("❌ خطأ في جلب الكوبونات:", err);
       toast.error(t("coupon.fetchError"));
-      // 🔥 تعيين مصفوفة فارغة في حالة الخطأ
       setCoupons([]);
     } finally {
-      setIsLoading(false); // 🔥 إصلاح: setIsLoading بدلاً من setLoading
+      setIsLoading(false);
     }
   };
 
@@ -52,9 +51,16 @@ const CouponManager = () => {
 
     try {
       setCreating(true);
-      const res = await axios.post("/api/coupons/create", newCoupon);
+      console.log("🔄 إنشاء كوبون جديد:", newCoupon);
       
-      // 🔥 إصلاح: معالجة الاستجابة
+      // 🔥 استخدم axios المخصصة بدون /api
+      const res = await axios.post("/coupons/create", {
+        discountAmount: Number(newCoupon.discountAmount)
+      });
+      
+      console.log("✅ استجابة إنشاء الكوبون:", res.data);
+      
+      // 🔥 معالجة الاستجابة
       const newCouponData = res.data?.coupon || res.data;
       
       if (newCouponData) {
@@ -66,7 +72,17 @@ const CouponManager = () => {
       }
     } catch (err) {
       console.error("❌ خطأ في إنشاء الكوبون:", err);
-      toast.error(err.response?.data?.message || t("coupon.createError"));
+      console.error("تفاصيل الخطأ:", err.response?.data);
+      
+      if (err.response?.status === 401) {
+        toast.error(t("coupon.unauthorized"));
+      } else if (err.response?.status === 403) {
+        toast.error(t("coupon.forbidden"));
+      } else if (err.response?.status === 405) {
+        toast.error("خطأ في السيرفر: الطريقة غير مسموحة. تأكد من إعدادات الـ API");
+      } else {
+        toast.error(err.response?.data?.message || t("coupon.createError"));
+      }
     } finally {
       setCreating(false);
     }
@@ -76,7 +92,9 @@ const CouponManager = () => {
     if (!id) return;
     
     try {
-      await axios.patch(`/api/coupons/toggle/${id}`);
+      console.log("🔄 تبديل حالة الكوبون:", id);
+      await axios.patch(`/coupons/toggle/${id}`);
+      
       const currentCoupon = coupons.find((c) => c._id === id);
       const isActive = currentCoupon?.isActive;
       
@@ -97,7 +115,9 @@ const CouponManager = () => {
     if (!id) return;
     
     try {
-      await axios.delete(`/api/coupons/${id}`);
+      console.log("🔄 حذف الكوبون:", id);
+      await axios.delete(`/coupons/${id}`);
+      
       toast.success(t("coupon.deleted"));
       setCoupons((prev) => prev.filter((c) => c._id !== id));
       setShowPopup(false);
@@ -134,6 +154,7 @@ const CouponManager = () => {
             className='mt-1 block w-full bg-[var(--color-bg-gray)] rounded-md py-2 px-3 text-[var(--color-text-secondary)] focus:ring-2 border border-[var(--color-accent)] focus:ring-[var(--color-accent)]'
             min="1"
             step="1"
+            required
           />
         </div>
 
@@ -157,65 +178,57 @@ const CouponManager = () => {
       {isLoading ? (
         <LoadingSpinner />
       ) : !Array.isArray(coupons) || coupons.length === 0 ? (
-        <div className='text-center text-[var(--color-text-secondary)]'>{t("coupon.noCoupons")}</div>
+        <div className='text-center text-[var(--color-text-secondary)] py-8'>
+          {t("coupon.noCoupons")}
+        </div>
       ) : (
         <ul className='space-y-3'>
           {coupons.map((coupon) => (
             <li
               key={coupon._id}
-              className='flex justify-between items-center bg-[var(--color-bg-opacity)] px-4 py-2 rounded-md text-[var(--color-text-secondary)] border border-[var(--color-border)]'
+              className='flex justify-between items-center bg-[var(--color-bg-opacity)] px-4 py-3 rounded-md text-[var(--color-text-secondary)] border border-[var(--color-border)] hover:border-[var(--color-accent)] transition-colors'
             >
-              <div>
-                <div className="flex items-center gap-2">
-                  <p className="font-semibold">{coupon.code}</p>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <p className="font-semibold text-lg text-[var(--color-text)]">{coupon.code}</p>
                   <button
                     onClick={() => {
                       const textToCopy = coupon.code;
-
-                      // ✅ الطريقة الحديثة (Clipboard API)
-                      if (navigator.clipboard && navigator.clipboard.writeText) {
-                        navigator.clipboard
-                          .writeText(textToCopy)
-                          .then(() => toast.success(t("coupon.copySuccess")))
-                          .catch(() => {
-                            // 🟡 الطريقة الاحتياطية fallback
-                            const tempInput = document.createElement("input");
-                            tempInput.value = textToCopy;
-                            document.body.appendChild(tempInput);
-                            tempInput.select();
-                            document.execCommand("copy");
-                            document.body.removeChild(tempInput);
-                            toast.success(t("coupon.copySuccess"));
-                          });
-                      } else {
-                        // 🟡 الطريقة القديمة fallback
-                        const tempInput = document.createElement("input");
-                        tempInput.value = textToCopy;
-                        document.body.appendChild(tempInput);
-                        tempInput.select();
-                        document.execCommand("copy");
-                        document.body.removeChild(tempInput);
-                        toast.success(t("coupon.copySuccess"));
-                      }
+                      navigator.clipboard.writeText(textToCopy)
+                        .then(() => toast.success(t("coupon.copySuccess")))
+                        .catch(() => toast.error(t("coupon.copyError")));
                     }}
-                    className="text-gray-400 hover:text-gray-500 focus:text-gray-500 transition-colors"
+                    className="text-gray-400 hover:text-[var(--color-accent)] transition-colors p-1 rounded"
                     title={t('coupon.copySuccess')}
                   >
                     <Copy className="h-4 w-4" />
                   </button>
                 </div>
 
-                <p className='text-sm text-[var(--color-text)]'>{coupon.discountAmount} {!isRTL ? "DA" : "دج"}</p>
+                <p className='text-sm text-[var(--color-text)] mb-1'>
+                  {coupon.discountAmount} {!isRTL ? "DA" : "دج"}
+                </p>
                 <p className='text-xs text-gray-400'>
                   {t("coupon.createdAt", {
                     date: dayjs(coupon.createdAt).format(" HH:mm  YYYY,MMM DD"),
                   })}
                 </p>
+                <div className={`inline-flex items-center gap-1 mt-2 px-2 py-1 rounded-full text-xs ${
+                  coupon.isActive 
+                    ? "bg-green-100 text-green-800" 
+                    : "bg-red-100 text-red-800"
+                }`}>
+                  <div className={`w-2 h-2 rounded-full ${
+                    coupon.isActive ? "bg-green-500" : "bg-red-500"
+                  }`}></div>
+                  {coupon.isActive ? t("coupon.active") : t("coupon.inactive")}
+                </div>
               </div>
+              
               <div className='flex gap-2'>
                 <button
                   onClick={() => toggleCoupon(coupon._id)}
-                  className={`text-sm rounded-md px-3 py-1 font-medium text-white flex items-center ${
+                  className={`text-sm rounded-md px-3 py-2 font-medium text-white flex items-center transition-colors ${
                     coupon.isActive
                       ? "bg-red-500 hover:bg-red-600 focus:bg-red-600"
                       : "bg-emerald-500 hover:bg-emerald-600 focus:bg-emerald-600"
@@ -224,22 +237,22 @@ const CouponManager = () => {
                   {coupon.isActive ? (
                     <>
                       <EyeOff className={`h-4 w-4 ${isRTL ? "ml-1" : "mr-1"}`} />
-                      {t("coupon.toggleDisable")}
+                      <span className="hidden sm:inline">{t("coupon.toggleDisable")}</span>
                     </>
                   ) : (
                     <>
                       <Eye className={`h-4 w-4 ${isRTL ? "ml-1" : "mr-1"}`} />
-                      {t("coupon.toggleEnable")}
+                      <span className="hidden sm:inline">{t("coupon.toggleEnable")}</span>
                     </>
                   )}
                 </button>
 
                 <button
                   onClick={() => openPopup(coupon._id)}
-                  className='text-sm rounded-md px-3 py-1 text-white font-medium flex items-center bg-red-600 focus:bg-red-700 hover:bg-red-700 focus:bg-red-700'
+                  className='text-sm rounded-md px-3 py-2 text-white font-medium flex items-center bg-red-600 hover:bg-red-700 focus:bg-red-700 transition-colors'
                 >
                   <Trash2 className={`h-4 w-4 ${isRTL ? "ml-1" : "mr-1"}`} />
-                  {t("coupon.delete")}
+                  <span className="hidden sm:inline">{t("coupon.delete")}</span>
                 </button>
               </div>
             </li>
@@ -256,12 +269,12 @@ const CouponManager = () => {
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className='bg-[var(--color-bg)] p-6 rounded-xl text-[var(--color-text-secondary)] w-[90%] max-w-md'
+              className='bg-[var(--color-bg)] p-6 rounded-xl text-[var(--color-text-secondary)] w-[90%] max-w-md border border-[var(--color-border)]'
               initial={{ scale: 0.8 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0.8 }}
             >
-              <h3 className='text-xl font-bold mb-4 text-center'>
+              <h3 className='text-xl font-bold mb-4 text-center text-[var(--color-text)]'>
                 {t("coupon.confirmDeleteTitle")}
               </h3>
               <p className='text-gray-500 mb-6 text-center'>
@@ -270,13 +283,13 @@ const CouponManager = () => {
               <div className='flex justify-center gap-4'>
                 <button
                   onClick={() => deleteCoupon(selectedCouponId)}
-                  className='bg-red-500 hover:bg-red-600 focus:bg-red-600 px-4 py-2 rounded text-white'
+                  className='bg-red-500 hover:bg-red-600 focus:bg-red-600 px-4 py-2 rounded text-white font-medium transition-colors'
                 >
                   {t("coupon.confirmDeleteYes")}
                 </button>
                 <button
                   onClick={() => setShowPopup(false)}
-                  className='bg-gray-600 hover:bg-gray-500 focus:bg-gray-500 px-4 py-2 rounded text-white'
+                  className='bg-gray-600 hover:bg-gray-500 focus:bg-gray-500 px-4 py-2 rounded text-white font-medium transition-colors'
                 >
                   {t("coupon.confirmDeleteCancel")}
                 </button>
