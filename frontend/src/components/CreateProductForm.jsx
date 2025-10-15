@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 const CreateProductForm = () => {
     const { t, i18n } = useTranslation();
     const isRTL = i18n.language === 'ar';
+  
   // بيانات النموذج
   const [newProduct, setNewProduct] = useState({
     name: "",
@@ -28,29 +29,44 @@ const CreateProductForm = () => {
 
   // عرض مقاسات أرقام أو حروف
   const [showNumbers, setShowNumbers] = useState(false);
+  const [loadingSettings, setLoadingSettings] = useState(true);
 
   // تحميل الخيارات عند أول تحميل
   useEffect(() => {
     const fetchSettings = async () => {
       try {
+        setLoadingSettings(true);
         const res = await axios.get("/api/settings");
         const data = res.data;
 
-        setCategories(data.categories);
-        setSizesLetters(data.sizes.filter((s) => s.type === "letter").map((s) => s.name));
-        setSizesNumbers(data.sizes.filter((s) => s.type === "number").map((s) => s.name));
-        setColorsList(data.colors);
+        // 🔥 إصلاح: معالجة القيم غير المعرفة
+        const safeSizes = Array.isArray(data.sizes) ? data.sizes : [];
+        const safeCategories = Array.isArray(data.categories) ? data.categories : [];
+        const safeColors = Array.isArray(data.colors) ? data.colors : [];
 
-        // تعيين أول فئة بشكل افتراضي
-        if (data.categories.length > 0) {
+        setCategories(safeCategories);
+        setSizesLetters(safeSizes.filter((s) => s?.type === "letter").map((s) => s?.name).filter(Boolean));
+        setSizesNumbers(safeSizes.filter((s) => s?.type === "number").map((s) => s?.name).filter(Boolean));
+        setColorsList(safeColors);
+
+        // تعيين أول فئة بشكل افتراضي فقط إذا كانت موجودة
+        if (safeCategories.length > 0) {
           setNewProduct((prev) => ({ 
             ...prev, 
-            category: data.categories[0]._id || data.categories[0] 
+            category: safeCategories[0]._id || safeCategories[0] 
           }));
         }
       } catch (error) {
         console.error("خطأ في جلب الإعدادات:", error);
         toast.error(t("productForm.errors.loadSettings"));
+        
+        // 🔥 تعيين قيم افتراضية فارغة في حالة الخطأ
+        setCategories([]);
+        setSizesLetters([]);
+        setSizesNumbers([]);
+        setColorsList([]);
+      } finally {
+        setLoadingSettings(false);
       }
     };
     fetchSettings();
@@ -154,6 +170,16 @@ const CreateProductForm = () => {
     }
     setLoading(false);
   };
+
+  // 🔥 عرض loading أثناء جلب البيانات
+  if (loadingSettings) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader className="h-8 w-8 animate-spin text-[var(--color-accent)]" />
+        <span className="mr-2">{t("loading")}</span>
+      </div>
+    );
+  }
 
   return (
     <motion.div
