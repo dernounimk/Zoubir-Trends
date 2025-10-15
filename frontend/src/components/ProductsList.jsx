@@ -1,8 +1,7 @@
-// ProductsList.js
 import { motion, AnimatePresence } from "framer-motion";
 import { Trash, Star, Eye, Pencil, Trash2, InstagramIcon, X, MessageSquare } from "lucide-react";
 import { useProductStore } from "../stores/useProductStore";
-import useSettingStore from "../stores/useSettingStore"; // 🔥 أضف هذا
+import useSettingStore from "../stores/useSettingStore";
 import toast from "react-hot-toast";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
@@ -22,7 +21,6 @@ const ProductsList = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [managingReviews, setManagingReviews] = useState(null);
 
-  // 🔥 استخدم useSettingStore بدلاً من state محلي
   const { 
     categories, 
     sizesLetters, 
@@ -45,7 +43,6 @@ const ProductsList = () => {
   const [filterDiscount, setFilterDiscount] = useState(false);
   const [filterFeature, setFilterFeature] = useState(false);
 
-  // فلترة المنتجات
   const filteredProducts = products.filter(product => {
     if (!product) return false;
     
@@ -62,8 +59,10 @@ const ProductsList = () => {
 
   const highlightText = (text, highlight) => {
     if (!highlight || !text) return text;
+
     const regex = new RegExp(`(${highlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
     const parts = text.split(regex);
+
     return parts.map((part, i) =>
       regex.test(part) ? (
         <span key={i} className="bg-yellow-400 text-black rounded px-0.5">{part}</span>
@@ -73,12 +72,11 @@ const ProductsList = () => {
     );
   };
 
-  // 🔥 استخدم fetchMetaData من الـ store بدلاً من axios مباشرة
   useEffect(() => {
     const loadData = async () => {
       try {
         setIsLoading(true);
-        await fetchMetaData(); // 🔥 هذا يستخدم الـ store
+        await fetchMetaData();
         await fetchAllProducts();
       } catch (error) {
         console.error("❌ خطأ في جلب البيانات:", error);
@@ -90,7 +88,6 @@ const ProductsList = () => {
     loadData();
   }, [fetchMetaData, fetchAllProducts, t]);
 
-  // 🔥 دالة لتحويل ID الفئة إلى اسم الفئة
   const getCategoryName = (category) => {
     if (!category) return t("productsList.noCategory");
     
@@ -98,7 +95,6 @@ const ProductsList = () => {
       return category.name;
     }
     
-    // إذا كان string (ID)، ابحث عن الفئة
     const categoryObj = categories.find(cat => cat._id === category);
     return categoryObj ? categoryObj.name : t("productsList.unknownCategory");
   };
@@ -140,17 +136,14 @@ const ProductsList = () => {
     setShowPopup(true);
   };
 
-  // 🔥 تحرير المنتج - استخدم البيانات من الـ store
   const editProduct = (product) => {
     if (!product) return;
     
-    // تحويل IDs الألوان إلى كائنات كاملة
     const fullColors = Array.isArray(product.colors) ? 
       product.colors.map(colorId => 
         colorsList.find(c => c._id === colorId) || colorId
       ) : [];
     
-    // تحويل ID التصنيف إلى كائن كامل
     const fullCategory = typeof product.category === 'string' ? 
       categories.find(c => c._id === product.category) || product.category : 
       product.category;
@@ -193,7 +186,6 @@ const ProductsList = () => {
       const newImagesBase64 = await Promise.all(newFiles.map(fileToBase64));
       const allImages = [...oldImages, ...newImagesBase64];
 
-      // تجهيز البيانات للإرسال
       const payload = {
         ...editingProduct,
         category: editingProduct.category?._id || editingProduct.category,
@@ -265,7 +257,7 @@ const ProductsList = () => {
         />
       </div>
 
-            <div className="overflow-x-auto">
+      <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-[var(--color-bg-gray)] text-xs">
           <thead className="bg-[var(--color-bg)]">
             <tr>
@@ -286,7 +278,6 @@ const ProductsList = () => {
           <tbody className="bg-[var(--color-bg-gray)] divide-y divide-[var(--color-bg)]">
             {Array.isArray(filteredProducts) && filteredProducts.map((product) => (
               <tr key={product._id} className="hover:bg-[var(--color-bg-opacity)]">
-                {/* خلية اسم المنتج */}
                 <td className="px-2 py-2 text-center">
                   <Link to={`/product/${product._id}`} className="flex flex-col items-center">
                     <img
@@ -306,7 +297,6 @@ const ProductsList = () => {
                   </Link>
                 </td>
 
-                {/* خلية السعر */}
                 <td className="px-2 py-2 text-center">
                   {product.priceAfterDiscount != null ? (
                     <>
@@ -329,15 +319,12 @@ const ProductsList = () => {
                   )}
                 </td>
 
-                {/* 🔥 خلية التصنيف - استخدم الدالة الجديدة */}
                 <td className="break-words px-2 py-2 text-center">
                   {getCategoryName(product.category)}
                 </td>
 
-                {/* خلية الإجراءات */}
                 <td className="px-1 py-2 font-medium text-center">
                   <div className="flex items-center justify-center gap-2 flex-wrap">
-                    {/* Toggle Featured */}
                     <button
                       onClick={async () => {
                         try {
@@ -361,7 +348,6 @@ const ProductsList = () => {
                       <Star className="h-5 w-5" />
                     </button>
 
-                    {/* view review */}
                     <button
                       onClick={() => setManagingReviews(product)}
                       className="rounded-full p-2 bg-purple-500 text-white hover:bg-purple-600 focus:outline-none focus:ring-0"
@@ -370,7 +356,6 @@ const ProductsList = () => {
                       <MessageSquare className="h-5 w-5" />
                     </button>
 
-                    {/* View product */}
                     <button
                       onClick={() => setViewingProduct(product)}
                       className="rounded-full p-2 bg-blue-500 text-white hover:bg-blue-600 focus:outline-none focus:ring-0"
@@ -379,7 +364,6 @@ const ProductsList = () => {
                       <Eye className='h-5 w-5' />
                     </button>
 
-                    {/* Edit product */}
                     <button
                       onClick={() => editProduct(product)}
                       className="rounded-full p-2 bg-green-500 text-white hover:bg-green-600 focus:outline-none focus:ring-0"
@@ -388,7 +372,6 @@ const ProductsList = () => {
                       <Pencil className='h-5 w-5' />
                     </button>
 
-                    {/* Delete product */}
                     <button
                       onClick={() => openDeletePopup(product._id)}
                       className="rounded-full p-2 bg-red-500 text-white hover:bg-red-600 focus:outline-none focus:ring-0"
@@ -420,15 +403,15 @@ const ProductsList = () => {
         />
       )}
 
-      {/* نافذة التعديل */}
+      {/* نافذة التعديل - الإصلاح */}
       {editingProduct &&
         createPortal(
-          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[9999]" dir={isRTL ? 'rtl' : 'ltr'}>
+          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[9999] p-4" dir={isRTL ? 'rtl' : 'ltr'}>
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.3 }}
-              className="bg-[var(--color-bg)] text-[var(--color-text-secondary)] rounded-lg shadow-lg w-[90%] max-w-2xl max-h-[90vh] flex flex-col"
+              className="bg-[var(--color-bg)] text-[var(--color-text-secondary)] rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] flex flex-col"
             >
               <div className="p-6 border-b border-[var(--color-bg-gray)] flex justify-between items-center">
                 <h3 className="text-xl font-bold text-[var(--color-text)]">
