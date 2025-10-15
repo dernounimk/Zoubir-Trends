@@ -1,14 +1,26 @@
+// CreateProductForm.js
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { PlusCircle, Loader, X } from "lucide-react";
 import toast from "react-hot-toast";
 import axios from "../lib/axios";
 import { useTranslation } from "react-i18next";
+import useSettingStore from '../stores/useSettingStore'; // 🔥 استخدم الـ store
 
 const CreateProductForm = () => {
-    const { t, i18n } = useTranslation();
-    const isRTL = i18n.language === 'ar';
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === 'ar';
   
+  // 🔥 استخدم الـ store بدلاً من state محلي
+  const { 
+    categories, 
+    sizesLetters, 
+    sizesNumbers, 
+    colorsList, 
+    fetchMetaData,
+    loadingMeta 
+  } = useSettingStore();
+
   const [newProduct, setNewProduct] = useState({
     name: "",
     description: "",
@@ -20,52 +32,30 @@ const CreateProductForm = () => {
     images: [],
   });
 
-  const [categories, setCategories] = useState([]);
-  const [sizesLetters, setSizesLetters] = useState([]);
-  const [sizesNumbers, setSizesNumbers] = useState([]);
-  const [colorsList, setColorsList] = useState([]);
-
   const [showNumbers, setShowNumbers] = useState(false);
-  const [loadingSettings, setLoadingSettings] = useState(true);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const fetchSettings = async () => {
+    const loadSettings = async () => {
       try {
-        setLoadingSettings(true);
-        const res = await axios.get("/settings");
-        const data = res.data;
-
-        const safeSizes = Array.isArray(data.sizes) ? data.sizes : [];
-        const safeCategories = Array.isArray(data.categories) ? data.categories : [];
-        const safeColors = Array.isArray(data.colors) ? data.colors : [];
-
-        setCategories(safeCategories);
-        setSizesLetters(safeSizes.filter((s) => s?.type === "letter").map((s) => s?.name).filter(Boolean));
-        setSizesNumbers(safeSizes.filter((s) => s?.type === "number").map((s) => s?.name).filter(Boolean));
-        setColorsList(safeColors);
-
-        if (safeCategories.length > 0) {
-          setNewProduct((prev) => ({ 
+        await fetchMetaData(); // 🔥 استخدم الـ store
+        
+        // تعيين الفئة الافتراضية بعد جلب البيانات
+        if (categories.length > 0) {
+          setNewProduct(prev => ({ 
             ...prev, 
-            category: safeCategories[0]._id || safeCategories[0] 
+            category: categories[0]._id 
           }));
         }
       } catch (error) {
         console.error("خطأ في جلب الإعدادات:", error);
         toast.error(t("productForm.errors.loadSettings"));
-        
-        setCategories([]);
-        setSizesLetters([]);
-        setSizesNumbers([]);
-        setColorsList([]);
-      } finally {
-        setLoadingSettings(false);
       }
     };
-    fetchSettings();
-  }, [t]);
-  
+    
+    loadSettings();
+  }, [fetchMetaData, t, categories.length]);
+
   const toggleSelection = (field, value) => {
     setNewProduct((prev) => {
       if (field === 'colors') {
@@ -134,7 +124,7 @@ const CreateProductForm = () => {
         description: newProduct.description,
         priceBeforeDiscount: parseFloat(newProduct.priceBefore),
         priceAfterDiscount: newProduct.priceAfter ? parseFloat(newProduct.priceAfter) : null,
-        category: typeof newProduct.category === 'object' ? newProduct.category._id : newProduct.category,
+        category: newProduct.category, // 🔥 هذا هو الـ ID
         sizes: newProduct.sizes,
         colors: newProduct.colors.map(c => typeof c === 'object' ? c._id : c),
         images: newProduct.images,
@@ -147,7 +137,7 @@ const CreateProductForm = () => {
         description: "",
         priceBefore: "",
         priceAfter: "",
-        category: categories.length > 0 ? (categories[0]._id || categories[0]) : "",
+        category: categories.length > 0 ? categories[0]._id : "",
         sizes: [],
         colors: [],
         images: [],
@@ -159,7 +149,7 @@ const CreateProductForm = () => {
     setLoading(false);
   };
 
-  if (loadingSettings) {
+  if (loadingMeta) {
     return (
       <div className="flex justify-center items-center h-64">
         <Loader className="h-8 w-8 animate-spin text-[var(--color-accent)]" />
@@ -222,14 +212,8 @@ const CreateProductForm = () => {
         <div>
           <label className="block text-sm font-medium">{t("productForm.category")}</label>
           <select
-            value={typeof newProduct.category === 'object' ? newProduct.category._id : newProduct.category}
-            onChange={(e) => {
-              const selectedCat = categories.find(c => c._id === e.target.value);
-              setNewProduct({ 
-                ...newProduct, 
-                category: selectedCat || e.target.value
-              });
-            }}
+            value={newProduct.category}
+            onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
             className="mt-1 block w-full bg-[var(--color-bg-gray)] border border-[var(--color-text)] rounded-md py-2 px-3 text-[var(--color-text-secondary)] focus:ring-2 focus:ring-[var(--color-accent)]"
             required
           >
@@ -259,15 +243,15 @@ const CreateProductForm = () => {
             {(showNumbers ? sizesNumbers : sizesLetters).map((size) => (
               <button
                 type="button"
-                key={size}
-                onClick={() => toggleSelection("sizes", size)}
+                key={size._id || size} // 🔥 استخدم _id إذا كان كائن
+                onClick={() => toggleSelection("sizes", size.name || size)} // 🔥 استخدم name
                 className={`px-3 py-1 rounded-md border ${
-                  newProduct.sizes.includes(size)
+                  newProduct.sizes.includes(size.name || size)
                     ? "bg-[var(--color-accent)] border-[var(--color-accent)] text-white"
                     : "bg-[var(--color-bg-gray)] border-[var(--color-text)]"
                 }`}
               >
-                {size}
+                {size.name || size}
               </button>
             ))}
           </div>
