@@ -146,7 +146,7 @@ const CouponManager = () => {
       <form onSubmit={createCoupon} className='space-y-4 mb-6'>
         <div>
           <input
-            type='number'
+            type="text"
             id='amount'
             placeholder={t("coupon.discountLabel")}
             value={newCoupon.discountAmount}
