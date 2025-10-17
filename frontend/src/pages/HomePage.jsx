@@ -21,11 +21,19 @@ const HomePage = () => {
     fetchMetaData,
     loadingMeta: categoriesLoading
   } = useSettingStore();
+useEffect(() => {
+  let fetched = false;
 
-  useEffect(() => {
+  if (!fetched) {
     fetchFeaturedProducts();
     fetchMetaData();
-  }, [fetchFeaturedProducts, fetchMetaData]);
+    fetched = true;
+  }
+
+  return () => {
+    fetched = true;
+  };
+}, [fetchFeaturedProducts, fetchMetaData]);
 
   // تأثيرات الحركة
   const containerVariants = {
@@ -49,8 +57,6 @@ const HomePage = () => {
       }
     }
   };
-
-
   
   return (
     <div className="relative min-h-screen text-white overflow-hidden">
