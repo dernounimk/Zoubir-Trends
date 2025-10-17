@@ -9,6 +9,5 @@ router.get("/", protectRoute, adminRoute, getAllOrders);
 router.delete("/:id", protectRoute, adminRoute, deleteOrder);
 router.patch("/toggle-confirm", protectRoute, adminRoute, toggleConfirmOrders);
 router.post("/follow-order", followOrder);
-router.post("/:orderNumber", askForPhone);
 
 export default router;

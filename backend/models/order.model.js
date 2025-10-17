@@ -62,10 +62,6 @@ const orderSchema = new mongoose.Schema(
 		deliveryPhone: {
 			type: String
 		},
-		isAskForPhone: {
-			type: Boolean,
-			default: false
-		},
 		confirmedAt: {
 			type: Date,
 			default: null

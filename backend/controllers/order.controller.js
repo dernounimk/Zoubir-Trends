@@ -72,7 +72,6 @@ export const createOrder = async (req, res) => {
       })),
       coupon,
       deliveryPhone,
-      isAskForPhone: false
     });
 
     await newOrder.save();
