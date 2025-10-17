@@ -1,4 +1,4 @@
-import { ShoppingCart, LogOut, Lock, Menu, Search, XCircle, KeyRound, Globe, Moon, Sun, Home, Phone, Truck, Heart } from "lucide-react";
+import { ShoppingCart, LogOut, Lock, Menu, Search, XCircle, KeyRound, Globe, Moon, Sun, Home, Phone, Heart } from "lucide-react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAdminAuthStore } from "../stores/useAdminAuthStore";
 import { useTranslation } from "react-i18next";
@@ -199,7 +199,6 @@ const Navbar = () => {
   {[
     { path: "/", label: t("navbar.home"), icon: <Home size={22} /> },
     { path: "/contact", label: t("navbar.contact"), icon: <Phone size={22} /> },
-    { path: "/order-tracking", label: t("navbar.follow"), icon: <Truck size={22} /> },
     { path: "/favorites", label: t("navbar.favorites"), icon: <Heart size={22} /> }
   ].map((item) => (
 <NavLink

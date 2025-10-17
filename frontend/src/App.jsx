@@ -22,7 +22,6 @@ import Confidentiality from "./pages/Confidentiality";
 import Terms from "./pages/Terms";
 import ScrollToTop from "./components/ScrollToTop";
 import NotFoundPage from "./pages/NotFoundPage";
-import TrackingForm from "./pages/TrackingForm";
 import FavoritesPage from "./pages/FavoritesPage";
 import ScrollToTopButton from "./components/ScrollToTopButton";
 
@@ -66,7 +65,6 @@ function App() {
 					<Route path="/faq" element={<Faq/>} />
 					<Route path="/privacy-policy" element={<Confidentiality/>} />
 					<Route path="/terms-of-use" element={<Terms/>} />
-					<Route path="/order-tracking" element={<TrackingForm/>} />
 					<Route path="*" element={<NotFoundPage/>} />
 					<Route path="/favorites" element={<FavoritesPage/>} />
 				</Routes>

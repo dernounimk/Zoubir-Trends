@@ -651,24 +651,6 @@ const OrderList = () => {
   value: selectedOrder.isConfirmed && selectedOrder.confirmedAt ? dayjs(selectedOrder.confirmedAt).format(" HH:mm  YYYY,MMM DD") : t("orders.pending")
 },
   {
-    label: t("orders.fields.deliveryPhone"),
-    value:  <div className="flex gap-1 mt-1">
-      <input
-        type="text"
-        value={deliveryPhone}
-        onChange={(e) => setDeliveryPhone(e.target.value)}
-        className="p-1 m-1 rounded bg-[var(--color-bg-gray)] rounded-md shadow-sm w-24 text-sm focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)] focus:border-[var(--color-accent)]"
-      />
-      <button
-        disabled={loading}
-        onClick={() => handleSave(selectedOrder._id)}
-        className="px-3 bg-[var(--color-accent)] rounded hover:bg-[var(--color-accent-hover)] text-white text-sm"
-      >
-        {t("orders.fields.save")}
-      </button>
-  </div>
-  },
-  {
     label: t("orders.fields.status"),
     value: 
     (selectedOrder.isConfirmed? t("orders.confirmed"): t("orders.pending")) +

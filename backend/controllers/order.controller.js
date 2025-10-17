@@ -101,22 +101,6 @@ export const editOrder = async (req, res) => {
   }
 };
 
-export const askForPhone = async (req, res) => {
-  const {orderNumber} = req.params;
-
-  try {
-    const foundOrder = await Order.findOne({orderNumber});
-    if (!foundOrder) return res.status(404).json({ message: "الطلبية غير موجودة" });
-
-    foundOrder.isAskForPhone = true;
-    res.status(200).json({message : "تم تلقي طلبك"});
-    await foundOrder.save();
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "حدث خطأ أثناء إرسال الطلب" });
-  }
-}
-
 export const getAllOrders = async (req, res) => {
   try {
     const orders = await Order.find().sort({ createdAt: -1 }).populate("products.product");;
@@ -174,50 +158,5 @@ export const toggleConfirmOrders = async (req, res) => {
   } catch (error) {
     console.error("Error toggling confirmation:", error);
     res.status(500).json({ message: "فشل في تغيير حالة الطلبيات" });
-  }
-};
-
-export const followOrder = async (req, res) => {
-  try {
-    const { orderNumber } = req.body;
-    const foundOrder = await Order.findOne({ orderNumber });
-
-    if (!foundOrder) {
-      return res.status(404).json({ message: "لم يتم العثور على الطلبية" });
-    }
-
-    const settings = await Setting.findOne().lean();
-    if (!settings ||!settings.delivery) {
-      return res.status(500).json({ message: "خطأ في إعدادات التوصيل" });
-    }
-
-    const deliverySetting = settings.delivery.find(d => d.state === foundOrder.wilaya);
-    const deliveryDays = deliverySetting? deliverySetting.deliveryDays: 3; 
-
-    const deliveryDurationMs = deliveryDays * 24 * 60 * 60 * 1000;
-
-    let timeLeftMs = 0;
-
-    if (foundOrder.isConfirmed) {
-      const confirmedTime = foundOrder.confirmedAt? new Date(foundOrder.confirmedAt).getTime(): 0;
-
-      const now = Date.now();
-      timeLeftMs = deliveryDurationMs - (now - confirmedTime);
-      if (timeLeftMs < 0) timeLeftMs = 0;
-    }
-
-    const orderDetail = {
-      orderNumber,
-      status: foundOrder.isConfirmed,
-      deliveryAddress: `ولاية ${foundOrder.wilaya} بلدية ${foundOrder.baladia}`,
-      estimatedDelivery: timeLeftMs,
-      deliveryPhone: foundOrder.deliveryPhone,
-      isAskForPhone: foundOrder.isAskForPhone
-    };
-
-    res.status(200).json(orderDetail);
-  } catch (error) {
-    console.error("Error tracking order:", error);
-    res.status(500).json({ message: "فشل في تتبع الطلبية" });
   }
 };

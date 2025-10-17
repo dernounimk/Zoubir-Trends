@@ -130,13 +130,6 @@ const PurchaseSuccessPage = () => {
           {/* 🚚 الأزرار */}
           <div className="space-y-4">
             <Link
-              to={"/order-tracking"}
-              className="w-full bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white font-bold py-2 px-4 rounded-lg transition duration-300 flex items-center justify-center"
-            >
-              <Truck className={isRTL ? "ml-2" : "mr-2"} size={18} />
-              {t("purchaseSuccess.follow")}
-            </Link>
-            <Link
               to={"/"}
               className="w-full bg-[var(--color-bg-gray)] hover:bg-[var(--color-accent)] border border-[var(--color-accent)] text-[var(--color-accent)] hover:text-white font-bold py-2 px-4 rounded-lg transition duration-300 flex items-center justify-center"
             >
