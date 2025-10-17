@@ -59,7 +59,7 @@ export const useProductStore = create((set, get) => ({
       set({ products: response.data.products || [], loading: false });
     } catch (error) {
       set({ loading: false });
-      toast.error("Failed to fetch products by category");
+      console.log(error);
     }
   },
 
@@ -75,7 +75,6 @@ export const useProductStore = create((set, get) => ({
       return response.data;
     } catch (error) {
       set({ loading: false });
-      toast.error("Failed to fetch product");
       return null;
     }
   },
@@ -95,12 +94,10 @@ export const useProductStore = create((set, get) => ({
         products: [...state.products, res.data],
         loading: false,
       }));
-      toast.success("Product created successfully");
       return res.data;
     } catch (error) {
       console.error("Create product error:", error);
       const errorMsg = error.response?.data?.message || "Failed to create product";
-      toast.error(errorMsg);
       set({ loading: false });
       throw error;
     }
@@ -127,9 +124,7 @@ export const useProductStore = create((set, get) => ({
         ),
         loading: false,
       }));
-      toast.success("Product updated successfully");
     } catch (error) {
-      toast.error("Failed to update product");
       set({ loading: false });
     }
   },
@@ -143,10 +138,8 @@ export const useProductStore = create((set, get) => ({
         products: state.products.filter((product) => product._id !== productId),
         loading: false,
       }));
-      toast.success("Product deleted successfully");
     } catch (error) {
       set({ loading: false });
-      toast.error("Failed to delete product");
     }
   },
 
@@ -163,10 +156,8 @@ export const useProductStore = create((set, get) => ({
         ),
         loading: false,
       }));
-      toast.success("Product featured status updated");
     } catch (error) {
       set({ loading: false });
-      toast.error("Failed to update product");
     }
   },
   
@@ -190,9 +181,7 @@ export const useProductStore = create((set, get) => ({
         ),
         loading: false,
       }));
-      toast.success("Product updated successfully");
     } catch (error) {
-      toast.error("Failed to update product");
       set({ loading: false });
     }
   },

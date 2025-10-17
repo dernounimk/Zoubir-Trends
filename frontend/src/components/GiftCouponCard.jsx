@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useCartStore } from "../stores/useCartStore";
 import { useTranslation } from "react-i18next";
+import toast from "react-hot-toast";
 
 const GiftCouponCard = () => {
   const { t } = useTranslation();
@@ -27,11 +28,13 @@ const GiftCouponCard = () => {
   const handleApplyCoupon = () => {
     if (!userInputCode.trim()) return;
     applyCoupon(userInputCode.trim());
+    toast.success(t("giftCoupon.appliedSuccess"));
   };
 
   const handleRemoveCoupon = async () => {
     await removeCoupon();
     setUserInputCode("");
+    toast.success(t("giftCoupon.removedSuccess"));
   };
 
   return (

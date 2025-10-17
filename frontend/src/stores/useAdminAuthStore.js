@@ -24,11 +24,9 @@ export const useAdminAuthStore = create(
               refreshToken: res.data.refreshToken,
               loading: false 
             });
-            toast.success("Login successful");
             if (navigate) navigate("/dash");
           } else {
             set({ loading: false });
-            toast.error("Invalid response from server");
           }
         } catch (error) {
           set({ loading: false });
@@ -48,7 +46,6 @@ export const useAdminAuthStore = create(
           console.error("Logout error:", error);
         } finally {
           set({ admin: null, accessToken: null, refreshToken: null });
-          toast.success("Logged out successfully");
         }
       },
 

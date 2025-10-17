@@ -294,6 +294,8 @@
     "label": "Have a discount code?",
     "placeholder": "Enter code here",
     "apply": "Apply Code",
+    "appliedSuccess": "Discount code applied successfully",
+    "removedSuccess": "Discount code removed successfully",
     "remove": "Remove Discount Code",
     "applied": "Applied Discount Code:",
     "available": "Available Discount Code:",

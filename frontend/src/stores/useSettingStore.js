@@ -70,7 +70,6 @@ const useSettingStore = create(
             orderCalculation: 'all',
           });
           
-          toast.error('Failed to load settings');
         } finally {
           set({ loadingMeta: false });
         }
@@ -86,12 +85,10 @@ const useSettingStore = create(
           const data = response?.data || {};
           if (data.orderCalculation) {
             set({ orderCalculation: data.orderCalculation });
-            toast.success('Order calculation updated');
           }
         } catch (error) {
           console.error('❌ Failed to update order calculation:', error);
           const errorMsg = error.response?.data?.message || 'Failed to update order calculation';
-          toast.error(errorMsg);
         } finally {
           set({ loadingMeta: false });
         }
@@ -109,10 +106,8 @@ const useSettingStore = create(
           set({ 
             deliverySettings: Array.isArray(data.delivery) ? data.delivery : [] 
           });
-          toast.success('Delivery settings updated');
         } catch (error) {
           console.error('❌ Failed to update delivery settings:', error);
-          toast.error('Failed to update delivery settings');
         } finally {
           set({ loadingMeta: false });
         }
@@ -151,11 +146,9 @@ const useSettingStore = create(
             }));
           }
 
-          toast.success('Category added');
           return newCategory;
         } catch (error) {
           console.error('❌ Failed to create category:', error);
-          toast.error(error.response?.data?.message || 'Failed to create category');
           throw error;
         } finally {
           set({ loadingMeta: false });
@@ -174,10 +167,8 @@ const useSettingStore = create(
             ),
           }));
 
-          toast.success('Category deleted');
         } catch (error) {
           console.error('❌ Failed to delete category:', error);
-          toast.error(error.response?.data?.message || 'Failed to delete category');
           throw error;
         } finally {
           set({ loadingMeta: false });
@@ -237,7 +228,6 @@ const useSettingStore = create(
             });
           }
 
-          toast.success('Size added');
           return newSize;
         } catch (error) {
           // التراجع عن التحديث المؤقت
@@ -254,7 +244,6 @@ const useSettingStore = create(
           });
 
           console.error('❌ Failed to create size:', error);
-          toast.error(error.response?.data?.message || 'Failed to create size');
           throw error;
         } finally {
           set({ loadingMeta: false });
@@ -276,10 +265,8 @@ const useSettingStore = create(
             ),
           }));
 
-          toast.success('Size deleted');
         } catch (error) {
           console.error('❌ Failed to delete size:', error);
-          toast.error(error.response?.data?.message || 'Failed to delete size');
           throw error;
         } finally {
           set({ loadingMeta: false });
@@ -307,11 +294,9 @@ const useSettingStore = create(
             }));
           }
 
-          toast.success('Color added');
           return newColor;
         } catch (error) {
           console.error('❌ Failed to create color:', error);
-          toast.error(error.response?.data?.message || 'Failed to create color');
           throw error;
         } finally {
           set({ loadingMeta: false });
@@ -330,10 +315,8 @@ const useSettingStore = create(
             ),
           }));
 
-          toast.success('Color deleted');
         } catch (error) {
           console.error('❌ Failed to delete color:', error);
-          toast.error(error.response?.data?.message || 'Failed to delete color');
           throw error;
         } finally {
           set({ loadingMeta: false });

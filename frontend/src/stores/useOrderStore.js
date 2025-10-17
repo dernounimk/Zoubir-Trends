@@ -17,7 +17,6 @@ export const useOrderStore = create((set, get) => ({
       console.log("✅ تم تحميل الطلبات بنجاح:", res.data?.length || 0);
     } catch (error) {
       console.error("❌ فشل في جلب الطلبات:", error);
-      toast.error("فشل في تحميل الطلبات");
       set({ loading: false });
     }
   },
@@ -28,10 +27,8 @@ export const useOrderStore = create((set, get) => ({
       set((state) => ({
         orders: state.orders.filter((order) => order._id !== id),
       }));
-      toast.success("تم حذف الطلب بنجاح");
     } catch (error) {
       console.error("Failed to delete order", error);
-      toast.error("فشل في حذف الطلب");
       throw error;
     }
   },
@@ -47,33 +44,9 @@ export const useOrderStore = create((set, get) => ({
             : order
         ),
       }));
-      
-      toast.success(res.data.message);
       return res.data;
     } catch (error) {
       console.error("Failed to toggle order confirmation", error);
-      toast.error("فشل في تحديث حالة الطلب");
-      throw error;
-    }
-  },
-
-  updateDeliveryPhone: async (orderId, deliveryPhone) => {
-    try {
-      const res = await axios.put(`/api/orders/${orderId}`, { deliveryPhone });
-      
-      set((state) => ({
-        orders: state.orders.map((order) =>
-          order._id === orderId 
-            ? { ...order, deliveryPhone } 
-            : order
-        ),
-      }));
-
-      toast.success("تم تحديث رقم الهاتف");
-      return res.data;
-    } catch (error) {
-      console.error("Failed to update delivery phone", error);
-      toast.error("فشل في تحديث رقم الهاتف");
       throw error;
     }
   },
