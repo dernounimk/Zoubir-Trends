@@ -1,5 +1,5 @@
 import express from "express";
-import { createOrder, deleteOrder, getAllOrders, toggleConfirmOrders, followOrder, editOrder, askForPhone } from "../controllers/order.controller.js";
+import { createOrder, deleteOrder, getAllOrders, toggleConfirmOrders, followOrder, editOrder } from "../controllers/order.controller.js";
 import { adminRoute, protectRoute } from "../middleware/auth.middleware.js";
 const router = express.Router();
 
