@@ -7,6 +7,8 @@ import toast from "react-hot-toast";
 const GiftCouponCard = () => {
   const { t } = useTranslation();
   const [userInputCode, setUserInputCode] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  
   const {
     coupon,
     isCouponApplied,
@@ -25,16 +27,27 @@ const GiftCouponCard = () => {
     }
   }, [coupon, isCouponApplied]);
 
-  const handleApplyCoupon = () => {
+  const handleApplyCoupon = async () => {
     // التحقق من أن الإدخال غير فارغ
     if (!userInputCode.trim()) {
       toast.error(t("giftCoupon.notValidCode"));
       return;
     }
 
-    // تطبيق الكوبون
-    applyCoupon(userInputCode.trim());
-    toast.success(t("giftCoupon.appliedSuccess"));
+    setIsLoading(true);
+    
+    try {
+      const result = await applyCoupon(userInputCode.trim());
+      
+      if (result.success) {
+        toast.success(t("giftCoupon.appliedSuccess"));
+      }
+      // إذا فشل، سيتم عرض toast.error من داخل applyCoupon
+    } catch (error) {
+      toast.error(t("giftCoupon.applyError"));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleRemoveCoupon = async () => {
@@ -63,19 +76,24 @@ const GiftCouponCard = () => {
             placeholder={t("giftCoupon.placeholder")}
             value={userInputCode}
             onChange={(e) => setUserInputCode(e.target.value)}
-            disabled={isCouponApplied}
+            disabled={isCouponApplied || isLoading}
           />
         </div>
 
         {!isCouponApplied ? (
           <motion.button
             type='button'
-            className='flex w-full items-center justify-center rounded-lg bg-[var(--color-accent)] px-5 py-2.5 text-sm font-medium text-white hover:bg-[var(--color-accent-hover)] focus:outline-none focus:ring-4 focus:ring-[var(--color-accent-hover)]'
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            className={`flex w-full items-center justify-center rounded-lg px-5 py-2.5 text-sm font-medium text-white focus:outline-none focus:ring-4 ${
+              isLoading 
+                ? 'bg-gray-400 cursor-not-allowed' 
+                : 'bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] focus:ring-[var(--color-accent-hover)]'
+            }`}
+            whileHover={!isLoading ? { scale: 1.05 } : {}}
+            whileTap={!isLoading ? { scale: 0.95 } : {}}
             onClick={handleApplyCoupon}
+            disabled={isLoading}
           >
-            {t("giftCoupon.apply")}
+            {isLoading ? t("giftCoupon.applying") : t("giftCoupon.apply")}
           </motion.button>
         ) : (
           <motion.button
@@ -90,10 +108,10 @@ const GiftCouponCard = () => {
         )}
       </div>
 
-      {coupon && (
+      {coupon && isCouponApplied && (
         <div className='mt-4'>
           <h3 className='text-lg font-medium text-[var(--color-text-secondary)]'>
-            {isCouponApplied ? t("giftCoupon.applied") : t("giftCoupon.available")}
+            {t("giftCoupon.applied")}
           </h3>
           <p className='mt-2 text-sm text-[var(--color-text)]'>
             {coupon.code} - {t("giftCoupon.discount", { amount: coupon.discountAmount })}

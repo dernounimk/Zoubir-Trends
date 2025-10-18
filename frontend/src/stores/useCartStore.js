@@ -97,16 +97,24 @@ export const useCartStore = create(
         set({ deliveryPrice: price });
         get().calculateTotals();
       },
-
-      // في useCartStore.js
+// في useCartStore.js
 applyCoupon: async (code) => {
   try {
-    const response = await axios.post("/api/coupons/validate", { code }); // 🔥 أضف /api
+    const response = await axios.post("/api/coupons/validate", { code });
     const coupon = response.data;
-    set({ coupon, isCouponApplied: true });
-    get().calculateTotals();
+    
+    // تأكد من أن الاستجابة تحتوي على البيانات المطلوبة
+    if (coupon && coupon.code && coupon.discountAmount !== undefined) {
+      set({ coupon, isCouponApplied: true });
+      get().calculateTotals();
+      return { success: true };
+    } else {
+      throw new Error("Invalid coupon response");
+    }
   } catch (err) {
-    toast.error(err.response?.data?.message || "Error validating coupon");
+    const errorMessage = err.response?.data?.message || "Error validating coupon";
+    toast.error(errorMessage);
+    return { success: false, error: errorMessage };
   }
 },
 
