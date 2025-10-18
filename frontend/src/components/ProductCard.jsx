@@ -72,7 +72,7 @@ const ProductCard = ({ product, onFavoriteToggle }) => {
             className={`absolute top-3 right-3 border border-[var(--color-border)] rounded-full p-3 flex items-center justify-center transition-colors ${
               isFavorite
                 ? "bg-[var(--color-accent)] text-[var(--color-on-accent)]"
-                : "bg-black/60 text-white hover:bg-[var(--color-bg-opacity)] hover:text-[var(--color-on-accent)]"
+                : "bg-black/60 text-white hover:bg-[var(--color-bg-opacity)]"
             }`}
           >
             <Heart size={22} fill={isFavorite ? "currentColor" : "none"} />

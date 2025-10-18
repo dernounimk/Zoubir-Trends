@@ -28,7 +28,7 @@ const CartItem = ({ item }) => {
         aria-label={t("cart.deleteItem")}
         title={t("cart.deleteItem")}
       >
-        <Trash size={18} />
+        <Trash size={20} />
       </button>
 
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between md:gap-6">
