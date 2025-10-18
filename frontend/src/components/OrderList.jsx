@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 import { useOrderStore } from "../stores/useOrderStore.js";
@@ -33,7 +33,6 @@ const OrderList = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [deliveryPhone, setDeliveryPhone] = useState("");
   const [loading, setLoading] = useState(false);
-  const [pressTimer, setPressTimer] = useState(null);
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchTypeIndex, setSearchTypeIndex] = useState(0);
@@ -43,6 +42,11 @@ const OrderList = () => {
   const [stateFilter, setStateFilter] = useState('all');
   const [clientAskforPhone, setClientAskforPhone] = useState(false);
   
+  // استخدام useRef للتعامل مع اللمس بدلاً من useState
+  const pressTimerRef = useRef(null);
+  const touchStartRef = useRef({ x: 0, y: 0 });
+  const isScrollingRef = useRef(false);
+
   // 🔥 إضافة console.log للتحقق من البيانات
   useEffect(() => {
     console.log("📊 حالة الطلبات:", {
@@ -172,13 +176,81 @@ const OrderList = () => {
   }, [fetchOrders, t]);
 
   // دالة مساعدة للتعامل مع تحديد الطلبات
-const handleOrderSelection = (orderId) => {
-  if (selectedOrders.includes(orderId)) {
-    setSelectedOrders(prev => prev.filter(id => id !== orderId));
-  } else {
-    setSelectedOrders(prev => [...prev, orderId]);
-  }
-};
+  const handleOrderSelection = (orderId) => {
+    if (selectedOrders.includes(orderId)) {
+      setSelectedOrders(prev => prev.filter(id => id !== orderId));
+    } else {
+      setSelectedOrders(prev => [...prev, orderId]);
+    }
+  };
+
+  // دالة محسنة للتعامل مع اللمس
+  const handleTouchStart = (e, order) => {
+    if (!order) return;
+    
+    // حفظ موقع اللمس الأولي للكشف عن التمرير
+    touchStartRef.current = {
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY
+    };
+    isScrollingRef.current = false;
+
+    // بدء المؤقت للنقر المطول
+    pressTimerRef.current = setTimeout(() => {
+      setIsSelectionMode(true);
+      handleOrderSelection(order._id);
+      pressTimerRef.current = null;
+    }, 600);
+  };
+
+  const handleTouchMove = (e) => {
+    if (!touchStartRef.current.x || !pressTimerRef.current) return;
+    
+    const touch = e.touches[0];
+    const deltaX = Math.abs(touch.clientX - touchStartRef.current.x);
+    const deltaY = Math.abs(touch.clientY - touchStartRef.current.y);
+    
+    // إذا كان المستخدم يقوم بالتمرير، إلغاء وضع التحديد
+    if (deltaX > 10 || deltaY > 10) {
+      isScrollingRef.current = true;
+      if (pressTimerRef.current) {
+        clearTimeout(pressTimerRef.current);
+        pressTimerRef.current = null;
+      }
+    }
+  };
+
+  const handleTouchEnd = (e, order) => {
+    if (pressTimerRef.current) {
+      clearTimeout(pressTimerRef.current);
+      pressTimerRef.current = null;
+    }
+
+    // إذا كان تمريراً وليس نقراً، لا تفعل شيئاً
+    if (isScrollingRef.current) {
+      isScrollingRef.current = false;
+      return;
+    }
+
+    // نقر عادي
+    if (order) {
+      if (isSelectionMode) {
+        handleOrderSelection(order._id);
+      } else {
+        // النقر العادي يفتح التفاصيل
+        setSelectedOrder(order);
+      }
+    }
+  };
+
+  // تنظيف المؤقت عند unmount
+  useEffect(() => {
+    return () => {
+      if (pressTimerRef.current) {
+        clearTimeout(pressTimerRef.current);
+      }
+    };
+  }, []);
 
   // دالة لتحويل ID اللون إلى كائن لون كامل
   const getFullColorData = (colorId) => {
@@ -455,6 +527,7 @@ const handleOrderSelection = (orderId) => {
               onClick={() => {
                 setSelectedOrders([]);
                 setSelectAll(false);
+                setIsSelectionMode(false);
               }}
               className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded text-sm flex items-center gap-1"
               whileHover={{ scale: 1.05 }}
@@ -482,112 +555,84 @@ const handleOrderSelection = (orderId) => {
             </tr>
           </thead>
           <tbody className="bg-[var(--color-bg-gray)] divide-y divide-[var(--color-bg)]">
-{Array.isArray(filteredSortedOrders) && filteredSortedOrders.map((order) => (
-  <tr              
-    key={order?._id}
-    onClick={() => {
-      if (!isSelectionMode && order) {
-        setSelectedOrder(order);
-      }
-    }}
-    // أحداث الماوس للحواسيب
-    onMouseDown={(e) => {
-      if (pressTimer || !order) return;
-      if (!isSelectionMode) {
-        const timer = setTimeout(() => {
-          setIsSelectionMode(true);
-          setPressTimer(null);
-          handleOrderSelection(order._id); // تحديد العنصر تلقائياً عند تفعيل وضع التحديد
-        }, 600);
-        setPressTimer(timer);
-      }
-    }}
-    onMouseUp={(e) => {
-      e.preventDefault();
-      if (pressTimer) {
-        clearTimeout(pressTimer);
-        setPressTimer(null);
-      }
-      if (isSelectionMode && order) {
-        handleOrderSelection(order._id);
-      }
-    }}
-    onMouseLeave={() => {
-      if (pressTimer) {
-        clearTimeout(pressTimer);
-        setPressTimer(null);
-      }
-    }}
-    // أحداث اللمس للهواتف
-    onTouchStart={(e) => {
-      if (pressTimer || !order) return;
-      if (!isSelectionMode) {
-        const timer = setTimeout(() => {
-          setIsSelectionMode(true);
-          setPressTimer(null);
-          handleOrderSelection(order._id); // تحديد العنصر تلقائياً عند تفعيل وضع التحديد
-        }, 600);
-        setPressTimer(timer);
-      }
-    }}
-    onTouchEnd={(e) => {
-      e.preventDefault();
-      if (pressTimer) {
-        clearTimeout(pressTimer);
-        setPressTimer(null);
-      }
-      if (isSelectionMode && order) {
-        handleOrderSelection(order._id);
-      }
-    }}
-    onTouchMove={() => {
-      if (pressTimer) {
-        clearTimeout(pressTimer);
-        setPressTimer(null);
-      }
-    }}
-    className={`transition text-center duration-200 cursor-pointer ${
-      order?.isAskForPhone && !order?.deliveryPhone && !selectedOrders.includes(order?._id) ? 'bg-yellow-900/40' : ''
-    } ${selectedOrders.includes(order?._id) ? 'bg-green-900/40' : 'hover:bg-[var(--color-bg-opacity)]'}`}
-  >
-    <td className="break-words px-2 py-2">
-      {searchTypeIndex === 0 ? highlightText(order?.orderNumber, searchQuery, true) : order?.orderNumber}
-    </td>
-    <td className="break-words px-2 py-2">
-      {searchTypeIndex === 1 ? highlightText(order?.fullName, searchQuery, true) : order?.fullName}
-    </td>
-    <td className="break-words px-2 py-2">
-      {searchTypeIndex === 2 ? highlightText(order?.phoneNumber, searchQuery, true) : order?.phoneNumber}
-    </td>
-    <td className="break-words px-2 py-2">{order?.wilaya}</td>
-    <td className="break-words px-2 py-2">
-      <motion.div
-        className={`inline-flex items-center gap-1 p-1 rounded-full font-semibold ${
-          order?.isConfirmed
-            ? "bg-green-900 text-green-400 border border-green-500/50"
-            : "bg-yellow-900 text-yellow-400 border border-yellow-500/50"
-        }`}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        {order?.isConfirmed ? (
-          <>
-            <CheckCircle className="h-4 w-4" />
-            <span>{t("orders.confirmed")}</span>
-          </>
-        ) : (
-          <>
-            <XCircle className="h-4 w-4" />
-            <span>{t("orders.pending")}</span>
-          </>
-        )}
-      </motion.div>
-    </td>
-  </tr>
-))}
+            {Array.isArray(filteredSortedOrders) && filteredSortedOrders.map((order) => (
+              <tr              
+                key={order?._id}
+                // أحداث اللمس المحسنة للهواتف
+                onTouchStart={(e) => handleTouchStart(e, order)}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={(e) => handleTouchEnd(e, order)}
+                // أحداث الماوس للحواسيب
+                onMouseDown={(e) => {
+                  if (!order) return;
+                  if (!isSelectionMode) {
+                    pressTimerRef.current = setTimeout(() => {
+                      setIsSelectionMode(true);
+                      handleOrderSelection(order._id);
+                      pressTimerRef.current = null;
+                    }, 600);
+                  }
+                }}
+                onMouseUp={(e) => {
+                  e.preventDefault();
+                  if (pressTimerRef.current) {
+                    clearTimeout(pressTimerRef.current);
+                    pressTimerRef.current = null;
+                  }
+                  if (isSelectionMode && order) {
+                    handleOrderSelection(order._id);
+                  }
+                }}
+                onMouseLeave={() => {
+                  if (pressTimerRef.current) {
+                    clearTimeout(pressTimerRef.current);
+                    pressTimerRef.current = null;
+                  }
+                }}
+                className={`transition text-center duration-200 cursor-pointer ${
+                  order?.isAskForPhone && !order?.deliveryPhone && !selectedOrders.includes(order?._id) ? 'bg-yellow-900/40' : ''
+                } ${selectedOrders.includes(order?._id) ? 'bg-green-900/40' : 'hover:bg-[var(--color-bg-opacity)]'}`}
+              >
+                <td className="break-words px-2 py-2">
+                  {searchTypeIndex === 0 ? highlightText(order?.orderNumber, searchQuery, true) : order?.orderNumber}
+                </td>
+                <td className="break-words px-2 py-2">
+                  {searchTypeIndex === 1 ? highlightText(order?.fullName, searchQuery, true) : order?.fullName}
+                </td>
+                <td className="break-words px-2 py-2">
+                  {searchTypeIndex === 2 ? highlightText(order?.phoneNumber, searchQuery, true) : order?.phoneNumber}
+                </td>
+                <td className="break-words px-2 py-2">{order?.wilaya}</td>
+                <td className="break-words px-2 py-2">
+                  <motion.div
+                    className={`inline-flex items-center gap-1 p-1 rounded-full font-semibold ${
+                      order?.isConfirmed
+                        ? "bg-green-900 text-green-400 border border-green-500/50"
+                        : "bg-yellow-900 text-yellow-400 border border-yellow-500/50"
+                    }`}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    {order?.isConfirmed ? (
+                      <>
+                        <CheckCircle className="h-4 w-4" />
+                        <span>{t("orders.confirmed")}</span>
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="h-4 w-4" />
+                        <span>{t("orders.pending")}</span>
+                      </>
+                    )}
+                  </motion.div>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
+
+      {/* نافذة تفاصيل الطلب */}
       {createPortal(
         <AnimatePresence>
           {selectedOrder && (
@@ -597,117 +642,121 @@ const handleOrderSelection = (orderId) => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               dir={isRTL ? 'rtl' : 'ltr'}
+              // منع تمرير الخلفية على الهاتف
+              onTouchMove={(e) => e.preventDefault()}
             >
               <motion.div
                 className="bg-[var(--color-bg)] p-6 rounded-xl text-[var(--color-text-secondary)] w-full max-w-3xl shadow-2xl max-h-[90vh] overflow-y-auto"
                 initial={{ scale: 0.8 }}
                 animate={{ scale: 1 }}
                 exit={{ scale: 0.8 }}
+                // منع إغلاق النافذة عند النقر داخل المحتوى
+                onClick={(e) => e.stopPropagation()}
               >
                 <h3 className="text-xl font-bold mb-4 text-center border-b pb-2 border-[var(--color-bg-gray)]">
                   {t("orders.detailsTitle")}
                 </h3>
                 
-<div className="grid sm:grid-cols-2 gap-4 text-sm leading-relaxed break-words">
-  {[{
-    label: t("orders.fields.orderNumber"),
-    value: selectedOrder.orderNumber
-  },{
-    label: t("orders.fields.customer"),
-    value: selectedOrder.fullName
-  },{
-    label: t("orders.fields.phone"),
-    value: (
-<>
-  {selectedOrder.phoneNumber}
-  <button
-    onClick={() => {
-      const textToCopy = selectedOrder.phoneNumber;
+                <div className="grid sm:grid-cols-2 gap-4 text-sm leading-relaxed break-words">
+                  {[{
+                    label: t("orders.fields.orderNumber"),
+                    value: selectedOrder.orderNumber
+                  },{
+                    label: t("orders.fields.customer"),
+                    value: selectedOrder.fullName
+                  },{
+                    label: t("orders.fields.phone"),
+                    value: (
+                      <>
+                        {selectedOrder.phoneNumber}
+                        <button
+                          onClick={() => {
+                            const textToCopy = selectedOrder.phoneNumber;
 
-      // ✅ الطريقة الحديثة (Clipboard API)
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard
-          .writeText(textToCopy)
-          .then(() => toast.success(t("orders.copyPhone")))
-          .catch(() => {
-            // 🟡 الطريقة الاحتياطية fallback في حال فشل النسخ الحديث
-            const tempInput = document.createElement("input");
-            tempInput.value = textToCopy;
-            document.body.appendChild(tempInput);
-            tempInput.select();
-            document.execCommand("copy");
-            document.body.removeChild(tempInput);
-            toast.success(t("orders.copyPhone"));
-          });
-      } else {
-        // 🟡 الطريقة القديمة fallback في حال لم يكن Clipboard API مدعومًا
-        const tempInput = document.createElement("input");
-        tempInput.value = textToCopy;
-        document.body.appendChild(tempInput);
-        tempInput.select();
-        document.execCommand("copy");
-        document.body.removeChild(tempInput);
-        toast.success(t("orders.copyPhone"));
-      }
-    }}
-    className={`${isRTL ? "pr-2" : "pl-2"} transition-colors hover:text-[var(--color-accent)]`}
-    title={t("orders.copyPhone")}
-  >
-    <Copy className="h-4 w-4" />
-  </button>
-</>
-    )
-  },
-  {
-    label: t("orders.fields.wilaya"),
-    value: selectedOrder.wilaya
-  },
-    {
-    label: t("orders.fields.baladia"),
-    value: selectedOrder.baladia
-  },
-    {
-    label: t("orders.fields.deliveryPlace"),
-    value: selectedOrder.deliveryPlace === "home" ? t("orders.deliveryOptions.home") : t("orders.deliveryOptions.office")
-  },
-  {
-    label: t("orders.fields.deliveryPrice"),
-    value: selectedOrder.deliveryPrice + " " + t("analytics.revenueUnit")
-  },
-  {
-    label: t("orders.fields.total"),
-    value: selectedOrder.totalAmount + " " + t("analytics.revenueUnit")
-  },
-{
-  label: t("orders.fields.date"),
-  value: dayjs(selectedOrder.createdAt).format(" HH:mm  YYYY,MMM DD")
-},
-{
-  label: t("orders.fields.confirmedAt"),
-  value: selectedOrder.isConfirmed && selectedOrder.confirmedAt ? dayjs(selectedOrder.confirmedAt).format(" HH:mm  YYYY,MMM DD") : t("orders.pending")
-},
-  {
-    label: t("orders.fields.status"),
-    value: 
-    (selectedOrder.isConfirmed? t("orders.confirmed"): t("orders.pending")) +
-    (selectedOrder.isAskForPhone? t("orders.askForNumber"): "")
-  },
-  {
-    label: t("orders.fields.coupon"),
-    value: selectedOrder.coupon? `${selectedOrder.coupon.code} ${t("giftCoupon.discount", { amount: selectedOrder.coupon.discountAmount })}`: t("لا يوجد")
-  },
-  {
-    label: t("orders.fields.note"),
-    value: selectedOrder.note || t("orders.fields.noNote")
-  },
-  ].map((item, idx) => (
-    <p key={idx} className="border-b border-[var(--color-bg-gray)] py-2 flex flex-col">
-      <span className="text-[var(--color-text)] font-semibold text-m mt-1 truncate text-right max-w-full">{item.label}</span>
-      <span className="truncate text-right max-w-full">{item.value}</span>
-    </p>
-  ))}
-</div>
-      <div className="mt-6">
+                            // ✅ الطريقة الحديثة (Clipboard API)
+                            if (navigator.clipboard && navigator.clipboard.writeText) {
+                              navigator.clipboard
+                                .writeText(textToCopy)
+                                .then(() => toast.success(t("orders.copyPhone")))
+                                .catch(() => {
+                                  // 🟡 الطريقة الاحتياطية fallback في حال فشل النسخ الحديث
+                                  const tempInput = document.createElement("input");
+                                  tempInput.value = textToCopy;
+                                  document.body.appendChild(tempInput);
+                                  tempInput.select();
+                                  document.execCommand("copy");
+                                  document.body.removeChild(tempInput);
+                                  toast.success(t("orders.copyPhone"));
+                                });
+                            } else {
+                              // 🟡 الطريقة القديمة fallback في حال لم يكن Clipboard API مدعومًا
+                              const tempInput = document.createElement("input");
+                              tempInput.value = textToCopy;
+                              document.body.appendChild(tempInput);
+                              tempInput.select();
+                              document.execCommand("copy");
+                              document.body.removeChild(tempInput);
+                              toast.success(t("orders.copyPhone"));
+                            }
+                          }}
+                          className={`${isRTL ? "pr-2" : "pl-2"} transition-colors hover:text-[var(--color-accent)]`}
+                          title={t("orders.copyPhone")}
+                        >
+                          <Copy className="h-4 w-4" />
+                        </button>
+                      </>
+                    )
+                  },
+                  {
+                    label: t("orders.fields.wilaya"),
+                    value: selectedOrder.wilaya
+                  },
+                    {
+                    label: t("orders.fields.baladia"),
+                    value: selectedOrder.baladia
+                  },
+                    {
+                    label: t("orders.fields.deliveryPlace"),
+                    value: selectedOrder.deliveryPlace === "home" ? t("orders.deliveryOptions.home") : t("orders.deliveryOptions.office")
+                  },
+                  {
+                    label: t("orders.fields.deliveryPrice"),
+                    value: selectedOrder.deliveryPrice + " " + t("analytics.revenueUnit")
+                  },
+                  {
+                    label: t("orders.fields.total"),
+                    value: selectedOrder.totalAmount + " " + t("analytics.revenueUnit")
+                  },
+                  {
+                    label: t("orders.fields.date"),
+                    value: dayjs(selectedOrder.createdAt).format(" HH:mm  YYYY,MMM DD")
+                  },
+                  {
+                    label: t("orders.fields.confirmedAt"),
+                    value: selectedOrder.isConfirmed && selectedOrder.confirmedAt ? dayjs(selectedOrder.confirmedAt).format(" HH:mm  YYYY,MMM DD") : t("orders.pending")
+                  },
+                  {
+                    label: t("orders.fields.status"),
+                    value: 
+                    (selectedOrder.isConfirmed? t("orders.confirmed"): t("orders.pending")) +
+                    (selectedOrder.isAskForPhone? t("orders.askForNumber"): "")
+                  },
+                  {
+                    label: t("orders.fields.coupon"),
+                    value: selectedOrder.coupon? `${selectedOrder.coupon.code} ${t("giftCoupon.discount", { amount: selectedOrder.coupon.discountAmount })}`: t("لا يوجد")
+                  },
+                  {
+                    label: t("orders.fields.note"),
+                    value: selectedOrder.note || t("orders.fields.noNote")
+                  },
+                  ].map((item, idx) => (
+                    <p key={idx} className="border-b border-[var(--color-bg-gray)] py-2 flex flex-col">
+                      <span className="text-[var(--color-text)] font-semibold text-m mt-1 truncate text-right max-w-full">{item.label}</span>
+                      <span className="truncate text-right max-w-full">{item.value}</span>
+                    </p>
+                  ))}
+                </div>
+                <div className="mt-6">
                   <strong className="block mb-4 text-[var(--color-text)] text-lg">
                     {t("orders.fields.products")}
                   </strong>
@@ -805,10 +854,12 @@ const handleOrderSelection = (orderId) => {
           <motion.div
             className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onTouchMove={(e) => e.preventDefault()}
           >
             <motion.div
               className="bg-[var(--color-bg)] p-6 rounded-xl text-[var(--color-text-secondary)] w-[90%] max-w-md shadow-2xl border border-[var(--color-bg-gray)]"
               initial={{ scale: 0.8 }} animate={{ scale: 1 }} exit={{ scale: 0.8 }}
+              onClick={(e) => e.stopPropagation()}
             >
               <h3 className="text-xl font-bold mb-4 text-center">
                 {t("orders.confirmDelete")}
