@@ -37,7 +37,7 @@ const CartItem = ({ item }) => {
         <div className="shrink-0 self-center md:self-auto">
           <Link to={`/product/${item._id}`} className="block">
             <img
-              className="h-24 w-24 md:h-32 md:w-32 rounded-lg object-cover cursor-pointer hover:opacity-90 focus:opacity-90 border border-gray-200"
+              className="h-24 w-24 md:h-32 md:w-32 rounded-lg object-cover cursor-pointer hover:opacity-90 focus:opacity-90"
               src={Array.isArray(item.images) ? item.images[0] : item.image}
               alt={item.name}
             />
@@ -128,7 +128,7 @@ const CartItem = ({ item }) => {
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-3 bg-[var(--color-bg-gray)] rounded-lg px-4 py-2">
                 <button
-                  className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-white border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] text-[var(--color-text)]"
+                  className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] text-[var(--color-text)]"
                   onClick={() =>
                     updateQuantity(
                       item._id,
@@ -139,11 +139,11 @@ const CartItem = ({ item }) => {
                   }
                   aria-label={t("cart.decreaseQuantity")}
                 >
-                  <Minus size={16} />
+                  <Minus size={20} />
                 </button>
                 <span className="min-w-[25px] text-center font-medium text-lg">{item.quantity}</span>
                 <button
-                  className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-white border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] text-[var(--color-text)]"
+                  className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] text-[var(--color-text)]"
                   onClick={() =>
                     updateQuantity(
                       item._id,
@@ -154,7 +154,7 @@ const CartItem = ({ item }) => {
                   }
                   aria-label={t("cart.increaseQuantity")}
                 >
-                  <Plus size={16} />
+                  <Plus size={20} />
                 </button>
               </div>
             </div>

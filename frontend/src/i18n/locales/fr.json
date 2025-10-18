@@ -71,7 +71,7 @@
     "name": "Votre nom",
     "instagram": "Votre compte Instagram",
     "comment": "Votre commentaire",
-    "rating": "Votre note",
+    "rating": "Votre évaluation",
     "submit": "Soumettre l'avis",
     "noReviews": "Aucun avis pour le moment",
     "showMore": "Afficher plus",
@@ -79,8 +79,8 @@
   },
   "followOreder": {
     "title": "Suivre la commande",
-    "enterOrderNumber": "Veuillez entrer votre numéro de commande",
-    "error": "Une erreur est survenue lors du suivi",
+    "enterOrderNumber": "Veuillez saisir le numéro de commande",
+    "error": "Une erreur s'est produite lors du suivi",
     "list": "Votre liste de commandes",
     "dontHave": "Vous n'avez aucune commande enregistrée",
     "number": "Numéro de commande",
@@ -90,7 +90,7 @@
     "deliveryAddress": "Adresse de livraison",
     "phoneGuy": "Téléphone du livreur",
     "NoPhone": "Aucun numéro de téléphone pour le moment",
-    "phone": "Copier le numéro",
+    "phone": "Copier le numéro de téléphone",
     "phoneSuccess": "Numéro de téléphone copié",
     "close": "Fermer",
     "askForNumber": "Demander le numéro du livreur",
@@ -101,120 +101,120 @@
   },
   "favoritesPage": {
     "title": "Produits favoris",
-    "info": "Les produits favoris sont stockés localement sur votre appareil uniquement et seront supprimés s'ils deviennent indisponibles",
+    "info": "Les produits favoris sont stockés localement sur votre appareil uniquement et seront supprimés s'ils ne sont plus disponibles",
     "emptyTitle": "Aucun produit dans les favoris",
-    "emptySubtitle": "Ajoutez vos produits préférés en cliquant sur l'icône cœur des cartes produit pour les sauvegarder ici",
-    "startShopping": "Commencer les achats maintenant"
+    "emptySubtitle": "Ajoutez vos produits préférés depuis l'icône cœur sur la carte produit pour les conserver ici",
+    "startShopping": "Commencer vos achats maintenant"
   },
   "notFound": {
     "title": "Page non trouvée",
-    "message": "Désolé, la page que vous recherchez n'existe pas ou a été déplacée",
+    "message": "Désolé, il semble que la page que vous recherchez n'existe pas ou a été déplacée",
     "homeButton": "Retour à l'accueil",
     "searchButton": "Rechercher dans la boutique"
   },
   "faq": {
-    "title": "Questions fréquemment posées",
-    "subtitle": "Réponses aux questions les plus courantes de nos clients",
+    "title": "Foire Aux Questions",
+    "subtitle": "Réponses aux questions les plus fréquentes de nos clients",
     "state": "Wilaya",
     "officePrice": "Prix de livraison au bureau",
     "homePrice": "Prix de livraison à domicile",
-    "deliveryDays": "Jours de livraison estimés",
+    "deliveryDays": "Jours de livraison prévus",
     "q1": "Quand ma commande arrivera-t-elle ?",
-    "a1": "Le délai de livraison dépend de la société de livraison choisie et du responsable de la livraison. Nous fournissons une liste détaillée des options de livraison, des prix et des délais de livraison sur cette même page pour que vous puissiez les vérifier facilement avant de commander.",
+    "a1": "Le délai de livraison dépend de la société de transport choisie et du livreur. Nous fournissons une liste détaillée des options d'expédition, des prix et des délais de livraison sur cette même page afin que vous puissiez les vérifier facilement avant de commander.",
     "q2": "Y a-t-il une livraison à l'étranger ?",
-    "a2": "Actuellement, notre partenaire de livraison effectue des livraisons en Algérie pour toutes les wilayas et un ensemble de grandes villes.",
-    "q3": "Y a-t-il des remises disponibles ?",
-    "a3": "La boutique offre un service de livraison en gros quantités et pour les commandes importantes, il y a une remise de 10 à 15% sur certains produits. Vous pouvez nous contacter directement pour vous renseigner sur les quantités et les remises.",
-    "q4": "Peut-on échanger le produit ?",
-    "a4": "L'échange est possible si le produit est dans son état d'origine avec son emballage original et uniquement dans les deux jours suivant la réception. Veuillez photographier le produit et l'envoyer en précisant la ville, l'adresse et le numéro de commande pour qu'il soit remplacé par un autre produit si le produit est défectueux ou présente un défaut particulier, ou ne correspond pas à ce qui était convenu.",
+    "a2": "Actuellement, la société de transport sous contrat livre en Algérie pour toutes les wilayas et un certain nombre de grandes villes.",
+    "q3": "Des réductions sont-elles disponibles ?",
+    "a3": "La boutique propose un service de livraison en gros et pour les commandes importantes, il y a une réduction de 10 à 15 % sur certains produits. Vous pouvez nous contacter directement pour vous renseigner sur les quantités et les réductions.",
+    "q4": "Les produits peuvent-ils être échangés ?",
+    "a4": "Les produits peuvent être échangés s'ils sont dans leur état d'origine, dans leur emballage d'origine, et dans un délai de deux jours seulement à partir de la date de réception.\nVeuillez photographier le produit et l'envoyer avec la ville, l'adresse et le numéro de commande pour qu'il soit remplacé par un autre produit si le produit est défectueux, endommagé ou ne correspond pas à ce qui était convenu.",
     "q5": "Prix et délais de livraison ?",
     "needHelp": "Vous avez encore besoin d'aide ?",
-    "contactText": "Si vous n'avez pas trouvé de réponse à votre question, vous pouvez contacter notre équipe de support 24h/24",
+    "contactText": "Si vous n'avez pas trouvé de réponse à votre question, vous pouvez contacter notre équipe d'assistance 24h/24 et 7j/7",
     "contactButton": "Contactez-nous"
   },
   "privacy": {
-    "title": "Politique de confidentialité",
+    "title": "Politique de Confidentialité",
     "subtitle": "Nous nous engageons à protéger votre vie privée et vos données personnelles",
     "introduction": {
       "title": "Introduction",
       "content": [
-        "Notre site respecte votre vie privée et cherche à protéger vos données personnelles.",
+        "Notre site Web respecte votre vie privée et cherche à protéger vos données personnelles.",
         "Cette politique de confidentialité explique comment nous collectons et utilisons vos données personnelles (dans certaines circonstances). Elle mentionne également les procédures suivies pour garantir la confidentialité de vos informations.",
-        "La protection de vos données est très importante pour nous. Votre nom et autres informations vous concernant seront utilisés conformément à la politique de confidentialité. Nous collecterons les informations lorsque cela est nécessaire ou si elles sont directement liées à nos transactions avec vous.",
-        "Vous pouvez naviguer sur le site sans avoir à fournir de données personnelles. Votre identité personnelle reste anonyme pendant votre visite sur le site et n'est pas divulguée."
+        "La protection de vos données est très importante pour nous. Votre nom et autres informations vous concernant seront utilisés conformément à ce qui est indiqué dans la politique de confidentialité. Nous collecterons des informations lorsque cela est nécessaire ou si elles sont directement liées à nos transactions avec vous.",
+        "Vous pouvez naviguer sur le site sans avoir besoin de fournir des données personnelles. Votre identité personnelle reste anonyme tout au long de votre visite sur le site et n'est pas divulguée."
       ]
     },
     "dataCollection": {
       "title": "Données que nous collectons",
       "content": [
-        "Nous pouvons avoir besoin de collecter vos informations si vous souhaitez commander un produit sur notre site.",
-        "Nous collectons, stockons et traitons vos données nécessaires au traitement de votre achat sur notre site, pour sécuriser d'éventuelles réclamations qui pourraient survenir ultérieurement, et pour vous fournir nos services disponibles. Nous pouvons collecter des informations personnelles incluant, sans limitation, le prénom, le nom, le numéro de téléphone et l'adresse de livraison.",
-        "Nous pouvons donner votre nom et votre adresse à un tiers afin de vous livrer votre achat (par exemple, un livreur ou un fournisseur)."
+        "Nous pouvons avoir besoin de collecter vos informations si vous souhaitez acheter un produit sur notre site.",
+        "Nous collectons, stockons et traitons vos données nécessaires pour traiter votre achat sur notre site afin de sécuriser toute réclamation potentielle qui pourrait survenir ultérieurement, et pour vous fournir nos services disponibles. Nous pouvons collecter des informations personnelles incluant, sans s'y limiter, le prénom, le nom, le numéro de téléphone et l'adresse de livraison.",
+        "Nous pouvons donner votre nom et votre adresse à un tiers pour livrer votre commande (par exemple, livreur ou fournisseur)."
       ]
     },
     "thirdParties": {
-      "title": "Tiers",
+      "title": "Autres parties",
       "content": [
-        "Nous pouvons transférer vos informations à d'autres entreprises de notre groupe ou à nos agents et sous-traitants pour nous aider dans les transactions liées conformément aux termes de la politique de confidentialité. Nous pouvons par exemple faire appel à un tiers pour nous aider à vous livrer les produits, à recevoir vos paiements, à les utiliser à des fins de statistiques et de recherche marketing ou pour aider l'équipe du service client. Nous pouvons avoir besoin de partager des informations avec un tiers pour nous protéger contre la fraude et réduire les risques de crédit.",
-        "Vos informations peuvent être divulguées à un tiers sans obtenir votre consentement préalable, sauf si cela est nécessaire aux fins énoncées dans cette politique de confidentialité, ou si la loi nous y oblige."
+        "Nous pouvons transférer vos informations à d'autres entreprises de notre groupe ou à nos agents et sous-traitants pour nous aider dans les transactions connexes conformément aux termes de la politique de confidentialité. Par exemple, nous pouvons faire appel à un tiers pour nous aider à livrer les produits, recevoir les paiements, les utiliser pour des statistiques et des études de marché, ou aider l'équipe du service client. Nous pouvons avoir besoin de partager des informations avec un tiers pour prévenir la fraude et réduire les risques de crédit.",
+        "Vos informations peuvent être divulguées à un tiers sans obtenir votre consentement préalable, sauf si cela est nécessaire aux fins énoncées dans cette politique de confidentialité, ou si la loi l'exige."
       ]
     },
     "lastUpdated": "Dernière mise à jour le 15 septembre 2025"
   },
   "terms": {
-    "title": "Conditions d'utilisation",
-    "subtitle": "Veuillez lire attentivement ces conditions avant d'utiliser le site",
+    "title": "Conditions d'Utilisation",
+    "subtitle": "Veuillez lire attentivement ces conditions avant d'utiliser le site Web",
     "introduction": {
       "title": "Introduction",
       "content": "En visitant ce site, le client est considéré comme acceptant les conditions générales en vigueur. Si vous n'acceptez pas ces conditions générales, veuillez vous abstenir d'utiliser le site. Les administrateurs du site se réservent le droit de modifier, mettre à jour, ajouter ou supprimer des parties des conditions d'utilisation à tout moment. Les modifications prennent effet immédiatement après leur publication sur le site sans préavis. Veuillez consulter régulièrement les conditions d'utilisation pour rester informé des mises à jour. Votre utilisation continue du site après la publication des modifications constitue une acceptation pleine et entière de ces modifications."
     },
     "siteUsage": {
-      "title": "Utilisation du site",
+      "title": "Utilisation du Site",
       "content": "Pour visiter ce site, vous devez avoir au moins 18 ans ou visiter le site sous la supervision d'un parent ou tuteur légal."
     },
     "ordersPricing": {
-      "title": "Approbation des commandes et détails des prix",
+      "title": "Approbation des Commandes et Détails des Prix",
       "content": [
-        "Veuillez noter que dans certains cas, les commandes peuvent ne pas être acceptées pour diverses raisons. Les administrateurs du site se réservent le droit de refuser ou d'annuler toute commande pour quelque raison que ce soit et à tout moment. Avant d'approuver la commande, il peut vous être demandé de fournir des informations supplémentaires pour vérification, telles que le numéro de téléphone ou l'adresse.",
-        "Nous nous efforçons de fournir des informations précises sur les prix à tous les utilisateurs. Cependant, des erreurs peuvent parfois se produire, comme un prix de produit incorrect sur le site. Par conséquent, nous nous réservons le droit de refuser ou d'annuler toute commande. En cas de prix de produit incorrect, nous avons le droit, à notre discrétion, de vous contacter pour obtenir des instructions ou d'annuler la commande et de vous informer de l'annulation. Nous nous réservons le droit de refuser ou d'annuler toute commande, qu'elle soit confirmée ou non."
+        "Veuillez noter que dans certains cas, la commande peut ne pas être acceptée pour diverses raisons. Les administrateurs du site se réservent le droit de refuser ou d'annuler toute commande pour quelque raison que ce soit et à tout moment. Avant d'approuver la commande, il peut vous être demandé de fournir des informations de vérification supplémentaires, telles que le numéro de téléphone ou l'adresse.",
+        "Nous nous efforçons de fournir des informations précises sur les prix à tous les utilisateurs. Cependant, des erreurs peuvent parfois se produire, comme un prix de produit incorrect sur le site. Par conséquent, nous nous réservons le droit de refuser ou d'annuler toute commande. En cas de prix de produit incorrectement spécifié, nous avons le droit, à notre discrétion, de vous contacter pour obtenir des instructions ou d'annuler la commande et de vous informer de l'annulation. Nous nous réservons le droit de refuser ou d'annuler toute commande, qu'elle soit confirmée ou non."
       ]
     },
     "trademarks": {
-      "title": "Marques commerciales et droits d'auteur",
-      "content": "Tous les droits de propriété intellectuelle, qu'ils soient enregistrés ou non, relatifs au site, son contenu et ses conceptions, nous appartiennent. Cela inclut toutes les œuvres logicielles, codes sources et programmes de base. Tout le contenu du site est protégé par le droit d'auteur en tant qu'œuvre intégrée unique. Tous droits réservés."
+      "title": "Marques et Droits d'Auteur",
+      "content": "Tous les droits de propriété intellectuelle, qu'ils soient enregistrés ou non, relatifs au site, son contenu et ses conceptions, nous appartiennent. Cela inclut toutes les œuvres logicielles, codes source et programmes de base. Tout le contenu du site est protégé par le droit d'auteur en tant qu'œuvre intégrée unique. Tous droits réservés."
     },
     "jurisdiction": {
-      "title": "Droit applicable et juridictions",
-      "content": "Ces conditions générales sont interprétées et appliquées conformément aux lois en vigueur dans le pays. En conséquence, chaque partie accepte de se soumettre à la juridiction des tribunaux du pays et de renoncer à toute objection relative au lieu."
+      "title": "Loi Applicable et Autorités Judiciaires",
+      "content": "Ces conditions générales sont interprétées et appliquées conformément aux lois en vigueur dans le pays. En conséquence, chaque partie accepte de se soumettre aux autorités judiciaires du pays et de renoncer à toute objection relative au lieu."
     },
     "lastUpdated": "Dernière mise à jour le 15 septembre 2025"
   },
   "analytics": {
-    "totalProducts": "Total des produits",
-    "featuredProducts": "Produits en vedette",
-    "regularProducts": "Produits réguliers",
-    "totalOrders": "Total des commandes",
-    "confirmedOrders": "Commandes confirmées",
-    "pendingOrders": "Commandes en attente",
-    "totalCoupons": "Total des coupons",
-    "activeCoupons": "Coupons actifs",
-    "inactiveCoupons": "Coupons inactifs",
+    "totalProducts": "Total des Produits",
+    "featuredProducts": "Produits en Vedette",
+    "regularProducts": "Produits Réguliers",
+    "totalOrders": "Total des Commandes",
+    "confirmedOrders": "Commandes Confirmées",
+    "pendingOrders": "Commandes en Attente",
+    "totalCoupons": "Total des Coupons",
+    "activeCoupons": "Coupons Actifs",
+    "inactiveCoupons": "Coupons Inactifs",
     "cardTitle": {
-      "revenue": "Revenus et remises"
+      "revenue": "Revenus et Remises"
     },
-    "totalDiscounts": "Total des remises",
-    "netRevenueWithDelivery": "Revenu net avec livraison",
-    "netRevenueWithoutDelivery": "Revenu net sans livraison",
+    "totalDiscounts": "Total des Remises",
+    "netRevenueWithDelivery": "Revenu Net Avec Livraison",
+    "netRevenueWithoutDelivery": "Revenu Net Sans Livraison",
     "revenueUnit": "DA",
-    "withDelivery": "Avec livraison",
-    "withoutDelivery": "Sans livraison",
-    "revenueHistory": "Historique des revenus",
-    "last7Days": "7 derniers jours",
-    "last30Days": "30 derniers jours",
-    "last14Days": "14 derniers jours",
-    "allData": "Toutes les données",
-    "allDates": "Toutes les dates",
-    "numberOfOrders": "Nombre de commandes",
+    "withDelivery": "Avec Livraison",
+    "withoutDelivery": "Sans Livraison",
+    "revenueHistory": "Historique des Revenus",
+    "last7Days": "7 Derniers Jours",
+    "last30Days": "30 Derniers Jours",
+    "last14Days": "14 Derniers Jours",
+    "allData": "Toutes les Données",
+    "allDates": "Toutes les Dates",
+    "numberOfOrders": "Nombre de Commandes",
     "date": "Date",
     "ordersLabel": "Commandes",
     "revenueLabel": "Revenus"
@@ -223,18 +223,19 @@
     "deleteItem": "Retirer du panier",
     "quantity": "Quantité",
     "price": "Prix",
+    "unitPrice": "Prix unitaire",
     "productName": "Nom du produit"
   },
   "deliverySettings": {
-    "title": "Paramètres de livraison",
+    "title": "Paramètres de Livraison",
     "state": "Wilaya",
     "officePrice": "Prix livraison bureau",
     "homePrice": "Prix livraison domicile",
-    "deliveryDays": "Jours de livraison estimés",
+    "deliveryDays": "Jours de livraison prévus",
     "save": "Sauvegarder les modifications"
   },
   "coupon": {
-    "title": "Gestion des remises",
+    "title": "Gestion des Remises",
     "discountLabel": "Valeur de la remise",
     "createButton": "Créer un code de réduction",
     "creating": "Création en cours...",
@@ -247,11 +248,18 @@
     "toggleEnable": "Activer",
     "toggleDisable": "Désactiver",
     "delete": "Supprimer",
-    "confirmDeleteTitle": "Confirmer la suppression",
+    "confirmDeleteTitle": "Confirmer la Suppression",
     "confirmDeleteMessage": "Êtes-vous sûr de vouloir supprimer ce code de réduction",
     "confirmDeleteYes": "Supprimer",
     "confirmDeleteCancel": "Annuler",
-    "deleted": "Code de réduction supprimé"
+    "deleted": "Code de réduction supprimé",
+    "invalidAmount": "Veuillez saisir une valeur de remise valide",
+    "copySuccess": "Code copié",
+    "copyError": "Échec de la copie du code",
+    "unauthorized": "Vous n'êtes pas autorisé pour cette action",
+    "forbidden": "Vous n'avez pas la permission pour cette action",
+    "active": "Actif",
+    "inactive": "Inactif"
   },
   "productForm": {
     "title": "Créer un nouveau produit",
@@ -272,7 +280,7 @@
       "priceBefore": "Le prix avant remise doit être un nombre",
       "priceAfter": "Le prix après remise doit être inférieur au prix avant remise",
       "images": "Au moins une image doit être ajoutée",
-      "create": "Une erreur est survenue lors de la création du produit"
+      "create": "Une erreur s'est produite lors de la création du produit"
     },
     "success": "Produit créé avec succès"
   },
@@ -285,22 +293,26 @@
     "description": "Le meilleur endroit pour acheter des produits premium à des prix compétitifs avec un excellent service client",
     "importantInfo": "Informations importantes",
     "faq": "FAQ",
-    "privacy": "Politique de confidentialité",
-    "terms": "Conditions d'utilisation",
+    "privacy": "Politique de Confidentialité",
+    "terms": "Conditions d'Utilisation",
     "contactUs": "Contactez-nous",
-    "developedBy": "Site développé par"
+    "developedBy": "Site Web développé par"
   },
   "giftCoupon": {
     "label": "Avez-vous un code de réduction ?",
     "placeholder": "Entrez le code ici",
+    "emptyCode": "Entrez un code de réduction",
+    "notValidCode": "Veuillez entrer un code de réduction valide",
     "apply": "Appliquer le code",
-    "remove": "Retirer le code de réduction",
+    "remove": "Supprimer le code de réduction",
+    "appliedSuccess": "Code de réduction appliqué",
+    "removedSuccess": "Code de réduction supprimé",
     "applied": "Code de réduction appliqué :",
     "available": "Code de réduction disponible :",
     "discount": "Remise {{amount}} DA"
   },
   "orders": {
-    "numberSaved": "Numéro du livreur sauvegardé",
+    "numberSaved": "Numéro de téléphone du livreur sauvegardé",
     "title": "Liste des commandes",
     "selected": "{{count}} commande sélectionnée",
     "askForNumber": " et le client demande le numéro de téléphone du livreur",
@@ -308,11 +320,11 @@
     "cancelSelection": "Annuler la sélection",
     "confirmSingle": "Confirmer la commande",
     "confirmSelected": "Confirmer la sélection",
-    "unconfirmSelected": "Déconfirmer la sélection",
+    "unconfirmSelected": "Annuler la confirmation de la sélection",
     "viewDetails": "Voir les détails de la commande",
-    "confirmSuccess": "{{count}} commandes confirmées",
-    "unconfirmSuccess": "{{count}} commandes déconfirmées",
-    "toggleError": "Une erreur est survenue lors du changement d'état",
+    "confirmSuccess": "{{count}} commande confirmée",
+    "unconfirmSuccess": "{{count}} commande non confirmée",
+    "toggleError": "Une erreur s'est produite lors du changement de statut",
     "selectAll": "Tout sélectionner",
     "all": "Tous les statuts",
     "confirmed": "Confirmée",
@@ -341,7 +353,7 @@
       "home": "Domicile",
       "office": "Bureau"
     },
-    "confirmError": "Une erreur est survenue lors de la confirmation des commandes",
+    "confirmError": "Une erreur s'est produite lors de la confirmation des commandes",
     "confirmDelete": "Confirmer la suppression",
     "confirmSingleDelete": "Êtes-vous sûr de vouloir supprimer cette commande ?",
     "confirmMultiple": "Êtes-vous sûr de vouloir supprimer {{count}} commandes ?",
@@ -359,7 +371,7 @@
       "baladia": "Baladia",
       "deliveryPlace": "Lieu de livraison",
       "deliveryPrice": "Prix de livraison",
-      "total": "Total général",
+      "total": "Montant total",
       "date": "Date de commande",
       "coupon": "Code de réduction",
       "note": "Note",
@@ -393,7 +405,7 @@
   "addToCart": "Ajouter au panier",
   "wilayaSelector": {
     "wilaya": "Wilaya",
-    "selectWilaya": "Choisir la wilaya"
+    "selectWilaya": "Sélectionner une wilaya"
   },
   "productsList": {
     "noProducts": "Aucun produit à afficher",
@@ -470,7 +482,7 @@
     "loading": "Chargement..."
   },
   "adminPage": {
-    "title": "Tableau de bord administrateur",
+    "title": "Tableau de bord Administrateur",
     "tabs": {
       "create": "Créer un produit",
       "products": "Produits",
@@ -508,8 +520,8 @@
     "location": "Localisation"
   },
   "home": {
-    "exploreCategories": "Découvrez nos catégories",
-    "discoverTrends": "Découvrez les dernières tendances de la mode éco-responsable"
+    "exploreCategories": "Explorez nos catégories",
+    "discoverTrends": "Découvrez les dernières tendances de la mode écologique"
   },
   "product": {
     "notFound": "Produit non trouvé",
@@ -519,7 +531,7 @@
     "quantity": "Quantité",
     "addToCart": "Ajouter au panier",
     "image": "Image",
-    "loadError": "Une erreur est survenue lors du chargement du produit",
+    "loadError": "Une erreur s'est produite lors du chargement du produit",
     "selectColor": "Veuillez sélectionner une couleur",
     "selectSize": "Veuillez sélectionner une taille",
     "enterName": "Veuillez entrer votre nom",
@@ -538,7 +550,7 @@
     "cashOnDelivery": "Paiement à la livraison",
     "estimatedDelivery": "Délai de livraison estimé",
     "deliveryTime": "1-3 jours",
-    "days": "Jour",
+    "days": "jour",
     "orderNumber": "Numéro de commande",
     "follow": "Service de suivi de commande",
     "continueShopping": "Continuer les achats",
@@ -567,7 +579,7 @@
       "selectWilaya": "Veuillez sélectionner une wilaya",
       "invalidBaladia": "Veuillez entrer un nom de baladia valide",
       "orderFailed": "Échec de l'envoi de la commande",
-      "orderError": "Une erreur est survenue lors de l'envoi de la commande"
+      "orderError": "Une erreur s'est produite lors de l'envoi de la commande"
     },
     "success": {
       "orderSent": "Commande envoyée avec succès"

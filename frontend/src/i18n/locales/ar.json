@@ -228,6 +228,7 @@
     "deleteItem": "إزالة من السلة",
     "quantity": "الكمية",
     "price": "السعر",
+    "unitPrice": "سعر الوحدة",
     "productName": "اسم المنتج"
   },
   "deliverySettings": {
