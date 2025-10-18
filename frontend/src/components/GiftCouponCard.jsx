@@ -26,7 +26,13 @@ const GiftCouponCard = () => {
   }, [coupon, isCouponApplied]);
 
   const handleApplyCoupon = () => {
-    if (!userInputCode.trim()) return;
+    // التحقق من أن الإدخال غير فارغ
+    if (!userInputCode.trim()) {
+      toast.error(t("giftCoupon.notValidCode"));
+      return;
+    }
+
+    // تطبيق الكوبون
     applyCoupon(userInputCode.trim());
     toast.success(t("giftCoupon.appliedSuccess"));
   };

@@ -305,10 +305,12 @@
   "giftCoupon": {
     "label": "هل لديك كود تخفيض؟",
     "placeholder": "أدخل الكود هنا",
+    "emptyCode": "قم بإدخال كود تخفيض",
+    "notValidCode": "الرجاء إدخال كود تخفيض صالح",
     "apply": "تطبيق الكود",
     "remove": "إزالة كود التخفيض",
-    "appliedSuccess": "تم تطبيق كود التخفيض بنجاح",
-    "removedSuccess": "تمت إزالة كود التخفيض بنجاح",
+    "appliedSuccess": "تم تطبيق كود التخفيض",
+    "removedSuccess": "تمت إزالة كود التخفيض",
     "applied": "كود التخفيض المطبق:",
     "available": "كود التخفيض المتاح:",
     "discount": "تخفيض {{amount}} DَA"

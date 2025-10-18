@@ -19,14 +19,20 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const __dirname = path.resolve();
 
-// ===== إعداد CORS مبسط =====
+// ===== إعداد CORS محسن =====
 app.use(cors({
   origin: [
     "https://zoubir-trends.vercel.app",
     "http://localhost:5173",
+    "http://localhost:3000", // أضيف للتنمية
   ],
-  credentials: false,
+  credentials: true, // غير إلى true إذا كنت تستخدم cookies/authentication
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"]
 }));
+
+// معالجة طلبات OPTIONS مسبقاً
+app.options("*", cors());
 
 // ===== Middleware =====
 app.use(express.json({ limit: "50mb" }));
@@ -73,5 +79,10 @@ app.use((err, req, res, next) => {
 // ===== تشغيل السيرفر =====
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`✅ Server running on port ${PORT}`);
+  console.log(`🌐 CORS enabled for: ${[
+    "https://zoubir-trends.vercel.app",
+    "http://localhost:5173",
+    "http://localhost:3000",
+  ].join(", ")}`);
   connectDB();
 });
