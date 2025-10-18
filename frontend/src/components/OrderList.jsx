@@ -42,6 +42,8 @@ const OrderList = () => {
   const [sortOrder, setSortOrder] = useState('desc');
   const [stateFilter, setStateFilter] = useState('all');
   const [clientAskforPhone, setClientAskforPhone] = useState(false);
+  const [touchStartPos, setTouchStartPos] = useState(null);
+
   
   // 🔥 إضافة console.log للتحقق من البيانات
   useEffect(() => {
@@ -486,18 +488,75 @@ const handleOrderSelection = (orderId) => {
   <tr              
     key={order?._id}
     onClick={() => {
-      if (!isSelectionMode && order) {
-        setSelectedOrder(order);
+      // منع النقر العادي في وضع التحديد
+      if (isSelectionMode || !order) return;
+      setSelectedOrder(order);
+    }}
+    // أحداث اللمس المحسنة للهواتف
+onTouchStart={(e) => {
+  if (!order) return;
+  
+  e.preventDefault();
+  
+  // حفظ موضع اللمس الأولي
+  const touch = e.touches[0];
+  setTouchStartPos({ x: touch.clientX, y: touch.clientY });
+  
+  if (!isSelectionMode) {
+    const timer = setTimeout(() => {
+      setIsSelectionMode(true);
+      setPressTimer(null);
+      handleOrderSelection(order._id);
+    }, 500);
+    setPressTimer(timer);
+  } else {
+    handleOrderSelection(order._id);
+  }
+}}
+
+    onTouchEnd={(e) => {
+      if (!order) return;
+      e.preventDefault();
+      
+      // إلغاء المؤقت إذا كان موجوداً
+      if (pressTimer) {
+        clearTimeout(pressTimer);
+        setPressTimer(null);
+      }
+      
+      // في وضع التحديد، لا نقوم بأي action عند الرفع
+      // فقط نترك التحديد كما هو
+    }}
+    onTouchMove={(e) => {
+      // إلغاء التحديد الطويل إذا قام المستخدم بالتمرير
+      if (pressTimer && !isSelectionMode) {
+        const touch = e.touches[0];
+        const movedDistance = Math.sqrt(
+          Math.pow(touch.clientX - (touchStartPos?.x || 0), 2) +
+          Math.pow(touch.clientY - (touchStartPos?.y || 0), 2)
+        );
+        
+        if (movedDistance > 10) { // إذا تحرك أكثر من 10px
+          clearTimeout(pressTimer);
+          setPressTimer(null);
+        }
       }
     }}
-    // أحداث الماوس للحواسيب
+    onTouchCancel={() => {
+      // إلغاء المؤقت إذا ألغى النظام اللمس
+      if (pressTimer) {
+        clearTimeout(pressTimer);
+        setPressTimer(null);
+      }
+    }}
+    // أحداث الماوس للحواسيب (محفوظة)
     onMouseDown={(e) => {
       if (pressTimer || !order) return;
       if (!isSelectionMode) {
         const timer = setTimeout(() => {
           setIsSelectionMode(true);
           setPressTimer(null);
-          handleOrderSelection(order._id); // تحديد العنصر تلقائياً عند تفعيل وضع التحديد
+          handleOrderSelection(order._id);
         }, 600);
         setPressTimer(timer);
       }
@@ -518,37 +577,22 @@ const handleOrderSelection = (orderId) => {
         setPressTimer(null);
       }
     }}
-    // أحداث اللمس للهواتف
-    onTouchStart={(e) => {
-      if (pressTimer || !order) return;
-      if (!isSelectionMode) {
-        const timer = setTimeout(() => {
-          setIsSelectionMode(true);
-          setPressTimer(null);
-          handleOrderSelection(order._id); // تحديد العنصر تلقائياً عند تفعيل وضع التحديد
-        }, 600);
-        setPressTimer(timer);
-      }
+    className={`transition text-center duration-200 cursor-pointer select-none ${
+      order?.isAskForPhone && !order?.deliveryPhone && !selectedOrders.includes(order?._id) 
+        ? 'bg-yellow-900/40' 
+        : ''
+    } ${
+      selectedOrders.includes(order?._id) 
+        ? 'bg-green-900/40 ring-2 ring-green-500' 
+        : 'hover:bg-[var(--color-bg-opacity)]'
+    } ${
+      isSelectionMode ? 'selection-mode-active' : ''
+    }`}
+    style={{
+      userSelect: 'none',
+      WebkitUserSelect: 'none',
+      WebkitTouchCallout: 'none'
     }}
-    onTouchEnd={(e) => {
-      e.preventDefault();
-      if (pressTimer) {
-        clearTimeout(pressTimer);
-        setPressTimer(null);
-      }
-      if (isSelectionMode && order) {
-        handleOrderSelection(order._id);
-      }
-    }}
-    onTouchMove={() => {
-      if (pressTimer) {
-        clearTimeout(pressTimer);
-        setPressTimer(null);
-      }
-    }}
-    className={`transition text-center duration-200 cursor-pointer ${
-      order?.isAskForPhone && !order?.deliveryPhone && !selectedOrders.includes(order?._id) ? 'bg-yellow-900/40' : ''
-    } ${selectedOrders.includes(order?._id) ? 'bg-green-900/40' : 'hover:bg-[var(--color-bg-opacity)]'}`}
   >
     <td className="break-words px-2 py-2">
       {searchTypeIndex === 0 ? highlightText(order?.orderNumber, searchQuery, true) : order?.orderNumber}
