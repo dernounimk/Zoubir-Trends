@@ -164,14 +164,57 @@ const OrderList = () => {
     loadData();
   }, [fetchOrders, t]);
 
-  // دالة مساعدة للتعامل مع تحديد الطلبات
-const handleOrderSelection = (orderId) => {
-  if (selectedOrders.includes(orderId)) {
-    setSelectedOrders(prev => prev.filter(id => id !== orderId));
-  } else {
-    setSelectedOrders(prev => [...prev, orderId]);
-  }
-};
+  // دالة محسنة للتعامل مع تحديد الطلبات
+  const handleOrderSelection = (orderId) => {
+    if (selectedOrders.includes(orderId)) {
+      setSelectedOrders(prev => prev.filter(id => id !== orderId));
+    } else {
+      setSelectedOrders(prev => [...prev, orderId]);
+    }
+  };
+
+  // دالة محسنة للنقر العادي (عرض التفاصيل)
+  const handleRowClick = (order, event) => {
+    // إذا كان في وضع التحديد، نتعامل مع التحديد فقط
+    if (isSelectionMode) {
+      handleOrderSelection(order._id);
+      return;
+    }
+
+    // إذا لم يكن في وضع التحديد، نعرض التفاصيل
+    if (!pressTimer) {
+      setSelectedOrder(order);
+    }
+  };
+
+  // دالة لبدء الضغط المطول (لتفعيل وضع التحديد)
+  const handleLongPressStart = (orderId) => {
+    if (pressTimer) return;
+    
+    const timer = setTimeout(() => {
+      setIsSelectionMode(true);
+      handleOrderSelection(orderId); // تحديد العنصر تلقائياً
+      setPressTimer(null);
+    }, 500); // 500ms للضغط المطول
+
+    setPressTimer(timer);
+  };
+
+  // دالة لإنهاء الضغط المطول
+  const handleLongPressEnd = () => {
+    if (pressTimer) {
+      clearTimeout(pressTimer);
+      setPressTimer(null);
+    }
+  };
+
+  // دالة لمسح المؤقت عند الخروج
+  const handleLongPressCancel = () => {
+    if (pressTimer) {
+      clearTimeout(pressTimer);
+      setPressTimer(null);
+    }
+  };
 
   // دالة لتحويل ID اللون إلى كائن لون كامل
   const getFullColorData = (colorId) => {
@@ -439,6 +482,7 @@ const handleOrderSelection = (orderId) => {
               onClick={() => {
                 setSelectedOrders([]);
                 setSelectAll(false);
+                setIsSelectionMode(false);
               }}
               className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded text-sm flex items-center gap-1"
               whileHover={{ scale: 1.05 }}
@@ -466,112 +510,62 @@ const handleOrderSelection = (orderId) => {
             </tr>
           </thead>
           <tbody className="bg-[var(--color-bg-gray)] divide-y divide-[var(--color-bg)]">
-{Array.isArray(filteredSortedOrders) && filteredSortedOrders.map((order) => (
-  <tr              
-    key={order?._id}
-    onClick={() => {
-      if (!isSelectionMode && order) {
-        setSelectedOrder(order);
-      }
-    }}
-    // أحداث الماوس للحواسيب
-    onMouseDown={(e) => {
-      if (pressTimer || !order) return;
-      if (!isSelectionMode) {
-        const timer = setTimeout(() => {
-          setIsSelectionMode(true);
-          setPressTimer(null);
-          handleOrderSelection(order._id); // تحديد العنصر تلقائياً عند تفعيل وضع التحديد
-        }, 600);
-        setPressTimer(timer);
-      }
-    }}
-    onMouseUp={(e) => {
-      e.preventDefault();
-      if (pressTimer) {
-        clearTimeout(pressTimer);
-        setPressTimer(null);
-      }
-      if (isSelectionMode && order) {
-        handleOrderSelection(order._id);
-      }
-    }}
-    onMouseLeave={() => {
-      if (pressTimer) {
-        clearTimeout(pressTimer);
-        setPressTimer(null);
-      }
-    }}
-    // أحداث اللمس للهواتف
-    onTouchStart={(e) => {
-      if (pressTimer || !order) return;
-      if (!isSelectionMode) {
-        const timer = setTimeout(() => {
-          setIsSelectionMode(true);
-          setPressTimer(null);
-          handleOrderSelection(order._id); // تحديد العنصر تلقائياً عند تفعيل وضع التحديد
-        }, 600);
-        setPressTimer(timer);
-      }
-    }}
-    onTouchEnd={(e) => {
-      e.preventDefault();
-      if (pressTimer) {
-        clearTimeout(pressTimer);
-        setPressTimer(null);
-      }
-      if (isSelectionMode && order) {
-        handleOrderSelection(order._id);
-      }
-    }}
-    onTouchMove={() => {
-      if (pressTimer) {
-        clearTimeout(pressTimer);
-        setPressTimer(null);
-      }
-    }}
-    className={`transition text-center duration-200 cursor-pointer ${
-    !selectedOrders.includes(order?._id) ? 'bg-yellow-900/40' : ''
-    } ${selectedOrders.includes(order?._id) ? 'bg-green-900/40' : 'hover:bg-[var(--color-bg-opacity)]'}`}
-  >
-    <td className="break-words px-2 py-2">
-      {searchTypeIndex === 0 ? highlightText(order?.orderNumber, searchQuery, true) : order?.orderNumber}
-    </td>
-    <td className="break-words px-2 py-2">
-      {searchTypeIndex === 1 ? highlightText(order?.fullName, searchQuery, true) : order?.fullName}
-    </td>
-    <td className="break-words px-2 py-2">
-      {searchTypeIndex === 2 ? highlightText(order?.phoneNumber, searchQuery, true) : order?.phoneNumber}
-    </td>
-    <td className="break-words px-2 py-2">{order?.wilaya}</td>
-    <td className="break-words px-2 py-2">
-      <motion.div
-        className={`inline-flex items-center gap-1 p-1 rounded-full font-semibold ${
-          order?.isConfirmed
-            ? "bg-green-900 text-green-400 border border-green-500/50"
-            : "bg-yellow-900 text-yellow-400 border border-yellow-500/50"
-        }`}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        {order?.isConfirmed ? (
-          <>
-            <CheckCircle className="h-4 w-4" />
-            <span>{t("orders.confirmed")}</span>
-          </>
-        ) : (
-          <>
-            <XCircle className="h-4 w-4" />
-            <span>{t("orders.pending")}</span>
-          </>
-        )}
-      </motion.div>
-    </td>
-  </tr>
-))}
+            {Array.isArray(filteredSortedOrders) && filteredSortedOrders.map((order) => (
+              <tr              
+                key={order?._id}
+                onClick={(e) => handleRowClick(order, e)}
+                onMouseDown={() => handleLongPressStart(order._id)}
+                onMouseUp={handleLongPressEnd}
+                onMouseLeave={handleLongPressCancel}
+                onTouchStart={() => handleLongPressStart(order._id)}
+                onTouchEnd={handleLongPressEnd}
+                onTouchMove={handleLongPressCancel}
+                className={`transition text-center duration-200 cursor-pointer ${
+                  selectedOrders.includes(order?._id) 
+                    ? 'bg-green-900/40' 
+                    : 'hover:bg-[var(--color-bg-opacity)]'
+                }`}
+              >
+                <td className="break-words px-2 py-2">
+                  {searchTypeIndex === 0 ? highlightText(order?.orderNumber, searchQuery, true) : order?.orderNumber}
+                </td>
+                <td className="break-words px-2 py-2">
+                  {searchTypeIndex === 1 ? highlightText(order?.fullName, searchQuery, true) : order?.fullName}
+                </td>
+                <td className="break-words px-2 py-2">
+                  {searchTypeIndex === 2 ? highlightText(order?.phoneNumber, searchQuery, true) : order?.phoneNumber}
+                </td>
+                <td className="break-words px-2 py-2">{order?.wilaya}</td>
+                <td className="break-words px-2 py-2">
+                  <motion.div
+                    className={`inline-flex items-center gap-1 p-1 rounded-full font-semibold ${
+                      order?.isConfirmed
+                        ? "bg-green-900 text-green-400 border border-green-500/50"
+                        : "bg-yellow-900 text-yellow-400 border border-yellow-500/50"
+                    }`}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    {order?.isConfirmed ? (
+                      <>
+                        <CheckCircle className="h-4 w-4" />
+                        <span>{t("orders.confirmed")}</span>
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="h-4 w-4" />
+                        <span>{t("orders.pending")}</span>
+                      </>
+                    )}
+                  </motion.div>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
+
+      {/* نافذة تفاصيل الطلب */}
       {createPortal(
         <AnimatePresence>
           {selectedOrder && (
@@ -592,105 +586,106 @@ const handleOrderSelection = (orderId) => {
                   {t("orders.detailsTitle")}
                 </h3>
                 
-<div className="grid sm:grid-cols-2 gap-4 text-sm leading-relaxed break-words">
-  {[{
-    label: t("orders.fields.orderNumber"),
-    value: selectedOrder.orderNumber
-  },{
-    label: t("orders.fields.customer"),
-    value: selectedOrder.fullName
-  },{
-    label: t("orders.fields.phone"),
-    value: (
-<>
-  {selectedOrder.phoneNumber}
-  <button
-    onClick={() => {
-      const textToCopy = selectedOrder.phoneNumber;
+                <div className="grid sm:grid-cols-2 gap-4 text-sm leading-relaxed break-words">
+                  {[{
+                    label: t("orders.fields.orderNumber"),
+                    value: selectedOrder.orderNumber
+                  },{
+                    label: t("orders.fields.customer"),
+                    value: selectedOrder.fullName
+                  },{
+                    label: t("orders.fields.phone"),
+                    value: (
+                      <div className="flex items-center justify-end gap-2">
+                        {selectedOrder.phoneNumber}
+                        <button
+                          onClick={() => {
+                            const textToCopy = selectedOrder.phoneNumber;
 
-      // ✅ الطريقة الحديثة (Clipboard API)
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard
-          .writeText(textToCopy)
-          .then(() => toast.success(t("orders.copyPhone")))
-          .catch(() => {
-            // 🟡 الطريقة الاحتياطية fallback في حال فشل النسخ الحديث
-            const tempInput = document.createElement("input");
-            tempInput.value = textToCopy;
-            document.body.appendChild(tempInput);
-            tempInput.select();
-            document.execCommand("copy");
-            document.body.removeChild(tempInput);
-            toast.success(t("orders.copyPhone"));
-          });
-      } else {
-        // 🟡 الطريقة القديمة fallback في حال لم يكن Clipboard API مدعومًا
-        const tempInput = document.createElement("input");
-        tempInput.value = textToCopy;
-        document.body.appendChild(tempInput);
-        tempInput.select();
-        document.execCommand("copy");
-        document.body.removeChild(tempInput);
-        toast.success(t("orders.copyPhone"));
-      }
-    }}
-    className={`${isRTL ? "pr-2" : "pl-2"} transition-colors hover:text-[var(--color-accent)]`}
-    title={t("orders.copyPhone")}
-  >
-    <Copy className="h-4 w-4" />
-  </button>
-</>
-    )
-  },
-  {
-    label: t("orders.fields.wilaya"),
-    value: selectedOrder.wilaya
-  },
-    {
-    label: t("orders.fields.baladia"),
-    value: selectedOrder.baladia
-  },
-    {
-    label: t("orders.fields.deliveryPlace"),
-    value: selectedOrder.deliveryPlace === "home" ? t("orders.deliveryOptions.home") : t("orders.deliveryOptions.office")
-  },
-  {
-    label: t("orders.fields.deliveryPrice"),
-    value: selectedOrder.deliveryPrice + " " + t("analytics.revenueUnit")
-  },
-  {
-    label: t("orders.fields.total"),
-    value: selectedOrder.totalAmount + " " + t("analytics.revenueUnit")
-  },
-{
-  label: t("orders.fields.date"),
-  value: dayjs(selectedOrder.createdAt).format(" HH:mm  YYYY,MMM DD")
-},
-{
-  label: t("orders.fields.confirmedAt"),
-  value: selectedOrder.isConfirmed && selectedOrder.confirmedAt ? dayjs(selectedOrder.confirmedAt).format(" HH:mm  YYYY,MMM DD") : t("orders.pending")
-},
-  {
-    label: t("orders.fields.status"),
-    value: 
-    (selectedOrder.isConfirmed? t("orders.confirmed"): t("orders.pending"))
-  },
-  {
-    label: t("orders.fields.coupon"),
-    value: selectedOrder.coupon? `${selectedOrder.coupon.code} ${t("giftCoupon.discount", { amount: selectedOrder.coupon.discountAmount })}`: t("لا يوجد")
-  },
-  {
-    label: t("orders.fields.note"),
-    value: selectedOrder.note || t("orders.fields.noNote")
-  },
-  ].map((item, idx) => (
-    <p key={idx} className="border-b border-[var(--color-bg-gray)] py-2 flex flex-col">
-      <span className="text-[var(--color-text)] font-semibold text-m mt-1 truncate text-right max-w-full">{item.label}</span>
-      <span className="truncate text-right max-w-full">{item.value}</span>
-    </p>
-  ))}
-</div>
-      <div className="mt-6">
+                            // ✅ الطريقة الحديثة (Clipboard API)
+                            if (navigator.clipboard && navigator.clipboard.writeText) {
+                              navigator.clipboard
+                                .writeText(textToCopy)
+                                .then(() => toast.success(t("orders.copyPhone")))
+                                .catch(() => {
+                                  // 🟡 الطريقة الاحتياطية fallback في حال فشل النسخ الحديث
+                                  const tempInput = document.createElement("input");
+                                  tempInput.value = textToCopy;
+                                  document.body.appendChild(tempInput);
+                                  tempInput.select();
+                                  document.execCommand("copy");
+                                  document.body.removeChild(tempInput);
+                                  toast.success(t("orders.copyPhone"));
+                                });
+                            } else {
+                              // 🟡 الطريقة القديمة fallback في حال لم يكن Clipboard API مدعومًا
+                              const tempInput = document.createElement("input");
+                              tempInput.value = textToCopy;
+                              document.body.appendChild(tempInput);
+                              tempInput.select();
+                              document.execCommand("copy");
+                              document.body.removeChild(tempInput);
+                              toast.success(t("orders.copyPhone"));
+                            }
+                          }}
+                          className="transition-colors hover:text-[var(--color-accent)]"
+                          title={t("orders.copyPhone")}
+                        >
+                          <Copy className="h-4 w-4" />
+                        </button>
+                      </div>
+                    )
+                  },
+                  {
+                    label: t("orders.fields.wilaya"),
+                    value: selectedOrder.wilaya
+                  },
+                  {
+                    label: t("orders.fields.baladia"),
+                    value: selectedOrder.baladia
+                  },
+                  {
+                    label: t("orders.fields.deliveryPlace"),
+                    value: selectedOrder.deliveryPlace === "home" ? t("orders.deliveryOptions.home") : t("orders.deliveryOptions.office")
+                  },
+                  {
+                    label: t("orders.fields.deliveryPrice"),
+                    value: selectedOrder.deliveryPrice + " " + t("analytics.revenueUnit")
+                  },
+                  {
+                    label: t("orders.fields.total"),
+                    value: selectedOrder.totalAmount + " " + t("analytics.revenueUnit")
+                  },
+                  {
+                    label: t("orders.fields.date"),
+                    value: dayjs(selectedOrder.createdAt).format(" HH:mm  YYYY,MMM DD")
+                  },
+                  {
+                    label: t("orders.fields.confirmedAt"),
+                    value: selectedOrder.isConfirmed && selectedOrder.confirmedAt ? dayjs(selectedOrder.confirmedAt).format(" HH:mm  YYYY,MMM DD") : t("orders.pending")
+                  },
+                  {
+                    label: t("orders.fields.status"),
+                    value: 
+                    (selectedOrder.isConfirmed? t("orders.confirmed"): t("orders.pending"))
+                  },
+                  {
+                    label: t("orders.fields.coupon"),
+                    value: selectedOrder.coupon? `${selectedOrder.coupon.code} ${t("giftCoupon.discount", { amount: selectedOrder.coupon.discountAmount })}`: t("لا يوجد")
+                  },
+                  {
+                    label: t("orders.fields.note"),
+                    value: selectedOrder.note || t("orders.fields.noNote")
+                  },
+                  ].map((item, idx) => (
+                    <p key={idx} className="border-b border-[var(--color-bg-gray)] py-2 flex flex-col">
+                      <span className="text-[var(--color-text)] font-semibold text-m mt-1 truncate text-right max-w-full">{item.label}</span>
+                      <span className="truncate text-right max-w-full">{item.value}</span>
+                    </p>
+                  ))}
+                </div>
+
+                <div className="mt-6">
                   <strong className="block mb-4 text-[var(--color-text)] text-lg">
                     {t("orders.fields.products")}
                   </strong>
