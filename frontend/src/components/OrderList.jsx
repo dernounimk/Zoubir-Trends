@@ -171,6 +171,15 @@ const OrderList = () => {
     loadData();
   }, [fetchOrders, t]);
 
+  // دالة مساعدة للتعامل مع تحديد الطلبات
+const handleOrderSelection = (orderId) => {
+  if (selectedOrders.includes(orderId)) {
+    setSelectedOrders(prev => prev.filter(id => id !== orderId));
+  } else {
+    setSelectedOrders(prev => [...prev, orderId]);
+  }
+};
+
   // دالة لتحويل ID اللون إلى كائن لون كامل
   const getFullColorData = (colorId) => {
     if (!colorId) return null;
@@ -473,82 +482,109 @@ const OrderList = () => {
             </tr>
           </thead>
           <tbody className="bg-[var(--color-bg-gray)] divide-y divide-[var(--color-bg)]">
-            {Array.isArray(filteredSortedOrders) && filteredSortedOrders.map((order) => (
-              <tr              
-                key={order?._id}
-                onClick={() => {
-                  if (!isSelectionMode && order) {
-                    setSelectedOrder(order);
-                  }
-                }}
-                onMouseDown={() => {
-                  if (pressTimer || !order) return;
-                  if (!isSelectionMode) {
-                    const timer = setTimeout(() => {
-                      setIsSelectionMode(true);
-                      setPressTimer(null);
-                    }, 600);
-                    setPressTimer(timer);
-                  }
-                }}
-                onMouseUp={() => {
-                  if (pressTimer) {
-                    clearTimeout(pressTimer);
-                    setPressTimer(null);
-                  }
-                  if (isSelectionMode && order) {
-                    if (selectedOrders.includes(order._id)) {
-                      setSelectedOrders(prev => prev.filter(id => id !== order._id));
-                    } else {
-                      setSelectedOrders(prev => [...prev, order._id]);
-                    }
-                  }
-                }}
-                onMouseLeave={() => {
-                  if (pressTimer) {
-                    clearTimeout(pressTimer);
-                    setPressTimer(null);
-                  }
-                }}
-                className={`transition text-center duration-200 ${
-                  order?.isAskForPhone && !order?.deliveryPhone && !selectedOrders.includes(order?._id) ? 'bg-yellow-900/40' : ''
-                } ${selectedOrders.includes(order?._id) ? 'bg-green-900/40' : 'hover:bg-[var(--color-bg-opacity)]'}`}
-              >
-                <td className="break-words px-2 py-2">
-                  {searchTypeIndex === 0 ? highlightText(order?.orderNumber, searchQuery, true) : order?.orderNumber}
-                </td>
-                <td className="break-words px-2 py-2">
-                  {searchTypeIndex === 1 ? highlightText(order?.fullName, searchQuery, true) : order?.fullName}
-                </td>
-                <td className="break-words px-2 py-2">
-                  {searchTypeIndex === 2 ? highlightText(order?.phoneNumber, searchQuery, true) : order?.phoneNumber}
-                </td>
-                <td className="break-words px-2 py-2">{order?.wilaya}</td>
-                <td className="break-words px-2 py-2">
-                  <motion.div
-                    className={`inline-flex items-center gap-1 p-1 rounded-full font-semibold ${
-                      order?.isConfirmed
-                        ? "bg-green-900 text-green-400 border border-green-500/50"
-                        : "bg-yellow-900 text-yellow-400 border border-yellow-500/50"
-                    }`}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    {order?.isConfirmed ? (
-                      <>
-                        <CheckCircle className="h-4 w-4" />
-                        <span>{t("orders.confirmed")}</span>
-                      </>
-                    ) : (
-                      <>
-                        <XCircle className="h-4 w-4" />
-                        <span>{t("orders.pending")}</span>
-                      </>
-                    )}
-                  </motion.div>
-                </td>
-              </tr>
-            ))}
+{Array.isArray(filteredSortedOrders) && filteredSortedOrders.map((order) => (
+  <tr              
+    key={order?._id}
+    onClick={() => {
+      if (!isSelectionMode && order) {
+        setSelectedOrder(order);
+      }
+    }}
+    // أحداث الماوس للحواسيب
+    onMouseDown={(e) => {
+      if (pressTimer || !order) return;
+      if (!isSelectionMode) {
+        const timer = setTimeout(() => {
+          setIsSelectionMode(true);
+          setPressTimer(null);
+          handleOrderSelection(order._id); // تحديد العنصر تلقائياً عند تفعيل وضع التحديد
+        }, 600);
+        setPressTimer(timer);
+      }
+    }}
+    onMouseUp={(e) => {
+      e.preventDefault();
+      if (pressTimer) {
+        clearTimeout(pressTimer);
+        setPressTimer(null);
+      }
+      if (isSelectionMode && order) {
+        handleOrderSelection(order._id);
+      }
+    }}
+    onMouseLeave={() => {
+      if (pressTimer) {
+        clearTimeout(pressTimer);
+        setPressTimer(null);
+      }
+    }}
+    // أحداث اللمس للهواتف
+    onTouchStart={(e) => {
+      if (pressTimer || !order) return;
+      if (!isSelectionMode) {
+        const timer = setTimeout(() => {
+          setIsSelectionMode(true);
+          setPressTimer(null);
+          handleOrderSelection(order._id); // تحديد العنصر تلقائياً عند تفعيل وضع التحديد
+        }, 600);
+        setPressTimer(timer);
+      }
+    }}
+    onTouchEnd={(e) => {
+      e.preventDefault();
+      if (pressTimer) {
+        clearTimeout(pressTimer);
+        setPressTimer(null);
+      }
+      if (isSelectionMode && order) {
+        handleOrderSelection(order._id);
+      }
+    }}
+    onTouchMove={() => {
+      if (pressTimer) {
+        clearTimeout(pressTimer);
+        setPressTimer(null);
+      }
+    }}
+    className={`transition text-center duration-200 cursor-pointer ${
+      order?.isAskForPhone && !order?.deliveryPhone && !selectedOrders.includes(order?._id) ? 'bg-yellow-900/40' : ''
+    } ${selectedOrders.includes(order?._id) ? 'bg-green-900/40' : 'hover:bg-[var(--color-bg-opacity)]'}`}
+  >
+    <td className="break-words px-2 py-2">
+      {searchTypeIndex === 0 ? highlightText(order?.orderNumber, searchQuery, true) : order?.orderNumber}
+    </td>
+    <td className="break-words px-2 py-2">
+      {searchTypeIndex === 1 ? highlightText(order?.fullName, searchQuery, true) : order?.fullName}
+    </td>
+    <td className="break-words px-2 py-2">
+      {searchTypeIndex === 2 ? highlightText(order?.phoneNumber, searchQuery, true) : order?.phoneNumber}
+    </td>
+    <td className="break-words px-2 py-2">{order?.wilaya}</td>
+    <td className="break-words px-2 py-2">
+      <motion.div
+        className={`inline-flex items-center gap-1 p-1 rounded-full font-semibold ${
+          order?.isConfirmed
+            ? "bg-green-900 text-green-400 border border-green-500/50"
+            : "bg-yellow-900 text-yellow-400 border border-yellow-500/50"
+        }`}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+      >
+        {order?.isConfirmed ? (
+          <>
+            <CheckCircle className="h-4 w-4" />
+            <span>{t("orders.confirmed")}</span>
+          </>
+        ) : (
+          <>
+            <XCircle className="h-4 w-4" />
+            <span>{t("orders.pending")}</span>
+          </>
+        )}
+      </motion.div>
+    </td>
+  </tr>
+))}
           </tbody>
         </table>
       </div>
