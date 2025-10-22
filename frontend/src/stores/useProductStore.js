@@ -13,7 +13,6 @@ export const useProductStore = create((set, get) => ({
   fetchAllProducts: async (page = 1, limit = 10) => {
     set({ loading: true });
     try {
-      // 🔥 استخدم '/products' بدون /api
       const response = await axios.get(`/products?page=${page}&limit=${limit}`);
       const data = response.data || {};
       
@@ -33,10 +32,9 @@ export const useProductStore = create((set, get) => ({
     }
   },
 
-  fetchFeaturedProducts: async () => {
+  fetchFeaturedProducts: async (retryCount = 0) => {
     set({ loading: true });
     try {
-      // 🔥 استخدم '/products/featured' بدون /api
       const response = await axios.get("/products/featured");
       set({ 
         featuredProducts: Array.isArray(response.data) ? response.data : [],
@@ -44,6 +42,16 @@ export const useProductStore = create((set, get) => ({
       });
     } catch (error) {
       console.error("Fetch featured products error:", error);
+      
+      // 🔥 حاول إعادة المحاولة مرة واحدة
+      if (retryCount < 1 && error.code !== "ECONNABORTED") {
+        console.log("Retrying fetch featured products...");
+        setTimeout(() => {
+          get().fetchFeaturedProducts(retryCount + 1);
+        }, 2000);
+        return;
+      }
+      
       set({ 
         featuredProducts: [],
         loading: false 
@@ -54,7 +62,6 @@ export const useProductStore = create((set, get) => ({
   fetchProductsByCategory: async (category) => {
     set({ loading: true });
     try {
-      // 🔥 استخدم '/products/category/' بدون /api
       const response = await axios.get(`/products/category/${category}`);
       set({ products: response.data.products || [], loading: false });
     } catch (error) {
@@ -66,7 +73,6 @@ export const useProductStore = create((set, get) => ({
   fetchProductById: async (productId) => {
     set({ loading: true });
     try {
-      // 🔥 استخدم '/products/' بدون /api
       const response = await axios.get(`/products/${productId}`);
       set({ 
         products: [response.data], 
@@ -88,7 +94,6 @@ export const useProductStore = create((set, get) => ({
         priceAfterDiscount: productData.priceAfterDiscount || null
       };
       
-      // 🔥 استخدم '/products' بدون /api
       const res = await axios.post("/products", payload);
       set((state) => ({
         products: [...state.products, res.data],
@@ -115,7 +120,6 @@ export const useProductStore = create((set, get) => ({
         payload.priceBeforeDiscount = null;
       }
 
-      // 🔥 استخدم '/products/' بدون /api
       const res = await axios.put(`/products/${productId}`, payload);
 
       set((state) => ({
@@ -132,7 +136,6 @@ export const useProductStore = create((set, get) => ({
   deleteProduct: async (productId) => {
     set({ loading: true });
     try {
-      // 🔥 استخدم '/products/' بدون /api
       await axios.delete(`/products/${productId}`);
       set((state) => ({
         products: state.products.filter((product) => product._id !== productId),
@@ -146,7 +149,6 @@ export const useProductStore = create((set, get) => ({
   toggleFeaturedProduct: async (productId) => {
     set({ loading: true });
     try {
-      // 🔥 استخدم '/products/' بدون /api
       const response = await axios.patch(`/products/${productId}/toggle-featured`);
       set((state) => ({
         products: state.products.map((product) =>
@@ -159,30 +161,5 @@ export const useProductStore = create((set, get) => ({
     } catch (error) {
       set({ loading: false });
     }
-  },
-  
-  updateProduct: async (productId, updatedData) => {
-    set({ loading: true });
-    try {
-      const payload = { ...updatedData };
-
-      if (payload.priceAfterDiscount === "") {
-        payload.priceAfterDiscount = null;
-      }
-      if (payload.priceBeforeDiscount === "") {
-        payload.priceBeforeDiscount = null;
-      }
-
-      const res = await axios.put(`/api/products/${productId}`, payload);
-
-      set((state) => ({
-        products: state.products.map((p) =>
-          p._id === productId ? res.data : p
-        ),
-        loading: false,
-      }));
-    } catch (error) {
-      set({ loading: false });
-    }
-  },
+  }
 }));

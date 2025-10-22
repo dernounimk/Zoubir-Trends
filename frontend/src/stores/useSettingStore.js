@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import axios from '../lib/axios'; // 🔥 استخدم axios المخصصة
+import axios from '../lib/axios';
 import { toast } from 'react-hot-toast';
 
 const useSettingStore = create(
@@ -14,24 +14,22 @@ const useSettingStore = create(
       orderCalculation: 'all',
       loadingMeta: false,
 
-      fetchMetaData: async () => {
+      fetchMetaData: async (retryCount = 0) => {
         try {
           set({ loadingMeta: true });
           
-          // 🔥 غير إلى '/api/settings'
-          const response = await axios.get('/api/settings');
+          // 🔥 غير إلى '/settings' بدون /api
+          const response = await axios.get('/settings');
           
           const data = response?.data || {};
           console.log('📦 Settings API Response:', data);
 
-          // 🔥 تحقق بشكل آمن من كل حقل
           const safeCategories = Array.isArray(data.categories) ? data.categories : [];
           const safeSizes = Array.isArray(data.sizes) ? data.sizes : [];
           const safeColors = Array.isArray(data.colors) ? data.colors : [];
           const safeDelivery = Array.isArray(data.delivery) ? data.delivery : [];
           const safeOrderCalc = typeof data.orderCalculation === 'string' ? data.orderCalculation : 'all';
 
-          // 🔥 تصفية الآحجام بشكل آمن
           const sizesLetters = safeSizes.filter(s => 
             s && typeof s === 'object' && s.type === 'letter'
           ) || [];
@@ -60,7 +58,15 @@ const useSettingStore = create(
         } catch (error) {
           console.error('❌ Failed to fetch metadata:', error);
           
-          // 🔥 بيانات افتراضية شاملة في حالة الخطأ
+          // 🔥 حاول إعادة المحاولة مرة واحدة
+          if (retryCount < 1 && error.code !== "ECONNABORTED") {
+            console.log("Retrying fetch metadata...");
+            setTimeout(() => {
+              get().fetchMetaData(retryCount + 1);
+            }, 2000);
+            return;
+          }
+          
           set({
             categories: [],
             sizesLetters: [],
@@ -79,8 +85,8 @@ const useSettingStore = create(
         if (!['confirmed', 'all'].includes(orderCalc)) return;
         try {
           set({ loadingMeta: true });
-          // 🔥 غير إلى '/api/settings'
-          const response = await axios.put('/api/settings', { orderCalculation: orderCalc });
+          // 🔥 غير إلى '/settings' بدون /api
+          const response = await axios.put('/settings', { orderCalculation: orderCalc });
           
           const data = response?.data || {};
           if (data.orderCalculation) {
@@ -97,8 +103,8 @@ const useSettingStore = create(
       updateDeliverySettings: async (deliverySettings) => {
         try {
           set({ loadingMeta: true });
-          // 🔥 غير إلى '/api/settings'
-          const response = await axios.put('/api/settings', { 
+          // 🔥 غير إلى '/settings' بدون /api
+          const response = await axios.put('/settings', { 
             delivery: Array.isArray(deliverySettings) ? deliverySettings : [] 
           });
           
@@ -130,8 +136,8 @@ const useSettingStore = create(
             imageBase64 = image || '';
           }
 
-          // 🔥 غير إلى '/api/settings'
-          const response = await axios.put('/api/settings', {
+          // 🔥 غير إلى '/settings' بدون /api
+          const response = await axios.put('/settings', {
             addCategory: { name, imageUrl: imageBase64 },
           });
 
@@ -158,8 +164,8 @@ const useSettingStore = create(
       deleteCategory: async (id) => {
         try {
           set({ loadingMeta: true });
-          // 🔥 غير إلى '/api/settings'
-          await axios.put('/api/settings', { removeCategoryId: id });
+          // 🔥 غير إلى '/settings' بدون /api
+          await axios.put('/settings', { removeCategoryId: id });
 
           set(state => ({
             categories: (state.categories || []).filter(c => 
@@ -187,7 +193,6 @@ const useSettingStore = create(
             type: type === 'letters' ? 'letter' : 'number',
           };
 
-          // تحديث متفائل
           set(state => {
             if (type === 'letters') {
               return { 
@@ -200,8 +205,8 @@ const useSettingStore = create(
             }
           });
 
-          // 🔥 غير إلى '/api/settings'
-          const response = await axios.put('/api/settings', {
+          // 🔥 غير إلى '/settings' بدون /api
+          const response = await axios.put('/settings', {
             addSize: { name: value, type: newSizeTemp.type },
           });
 
@@ -230,7 +235,6 @@ const useSettingStore = create(
 
           return newSize;
         } catch (error) {
-          // التراجع عن التحديث المؤقت
           set(state => {
             if (type === 'letters') {
               return { 
@@ -253,8 +257,8 @@ const useSettingStore = create(
       deleteSize: async (id) => {
         try {
           set({ loadingMeta: true });
-          // 🔥 غير إلى '/api/settings'
-          await axios.put('/api/settings', { removeSizeId: id });
+          // 🔥 غير إلى '/settings' بدون /api
+          await axios.put('/settings', { removeSizeId: id });
 
           set(state => ({
             sizesLetters: (state.sizesLetters || []).filter(s => 
@@ -278,8 +282,8 @@ const useSettingStore = create(
           set({ loadingMeta: true });
           if (!name || !hex) throw new Error('Name and hex are required');
 
-          // 🔥 غير إلى '/api/settings'
-          const response = await axios.put('/api/settings', {
+          // 🔥 غير إلى '/settings' بدون /api
+          const response = await axios.put('/settings', {
             addColor: { name, hex },
           });
 
@@ -306,8 +310,8 @@ const useSettingStore = create(
       deleteColor: async (id) => {
         try {
           set({ loadingMeta: true });
-          // 🔥 غير إلى '/api/settings'
-          await axios.put('/api/settings', { removeColorId: id });
+          // 🔥 غير إلى '/settings' بدون /api
+          await axios.put('/settings', { removeColorId: id });
 
           set(state => ({
             colorsList: (state.colorsList || []).filter(c => 
