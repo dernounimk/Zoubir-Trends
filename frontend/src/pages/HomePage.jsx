@@ -29,7 +29,6 @@ const HomePage = () => {
     const fetchData = async () => {
       if (isMounted) {
         try {
-          // 🔥 استخدم Promise.all لجلب البيانات بشكل متوازي
           await Promise.all([
             fetchFeaturedProducts(),
             fetchMetaData()
@@ -88,62 +87,38 @@ const HomePage = () => {
           </p>
         </motion.div>
 
-        {/* 🔥 تحسين عرض التصنيفات */}
-        <div className="mb-12">
-          <h2 className="text-3xl font-bold text-[var(--color-accent)] text-center mb-8">
-            {t("categories.title", "التصنيفات")}
-          </h2>
-          {categoriesLoading ? (
-            <div className="flex justify-center py-8">
-              <LoadingSpinner size="lg" />
-            </div>
-          ) : categories.length > 0 ? (
-            <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
-            >
-              {categories.map((category) => (
-                <motion.div key={category._id} variants={itemVariants}>
-                  <CategoryItem 
-                    category={{
-                      ...category,
-                      href: `/products?category=${category._id}`,
-                      imageUrl: category.imageUrl || '/default-category.jpg'
-                    }}
-                  />
-                </motion.div>
-              ))}
-            </motion.div>
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-[var(--color-text-secondary)]">
-                {t("categories.empty", "لا توجد تصنيفات متاحة")}
-              </p>
-            </div>
-          )}
-        </div>
+        {/* قائمة التصنيفات */}
+        {categoriesLoading ? (
+          <div className="flex justify-center py-12">
+            <LoadingSpinner size="lg" />
+          </div>
+        ) : (
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+          >
+            {categories.map((category) => (
+              <motion.div key={category._id} variants={itemVariants}>
+                <CategoryItem 
+                  category={{
+                    ...category,
+                    href: `/products?category=${category._id}`,
+                    imageUrl: category.imageUrl || '/default-category.jpg'
+                  }}
+                />
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
 
-        {/* 🔥 تحسين عرض المنتجات المميزة */}
-        <div>
-          <h2 className="text-3xl font-bold text-[var(--color-accent)] text-center mb-8">
-            {t("featured.title", "المنتجات المميزة")}
-          </h2>
-          {productsLoading ? (
-            <div className="flex justify-center py-8">
-              <LoadingSpinner size="lg" />
-            </div>
-          ) : featuredProducts?.length > 0 ? (
-            <FeaturedProducts featured={featuredProducts} /> 
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-[var(--color-text-secondary)]">
-                {t("featured.empty", "لا توجد منتجات مميزة حالياً")}
-              </p>
-            </div>
-          )}
-        </div>
+        {/* المنتجات المميزة */}
+        {!productsLoading && featuredProducts?.length > 0 ? (
+          <FeaturedProducts featured={featuredProducts} /> 
+        ) : (
+          !productsLoading && <p></p>
+        )}
       </div>
     </div>
   );
