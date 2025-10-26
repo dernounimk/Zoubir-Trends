@@ -10,27 +10,28 @@ export const useProductStore = create((set, get) => ({
   totalPages: 1,
   totalProducts: 0,
 
-  fetchAllProducts: async (page = 1, limit = 10) => {
-    set({ loading: true });
-    try {
-      const response = await axios.get(`/products?page=${page}&limit=${limit}`);
-      const data = response.data || {};
-      
-      set({
-        products: Array.isArray(data.products) ? data.products : [],
-        currentPage: data.currentPage || 1,
-        totalPages: data.totalPages || 1,
-        totalProducts: data.totalProducts || 0,
-        loading: false,
-      });
-    } catch (error) {
-      console.error("Fetch products error:", error);
-      set({ 
-        products: [],
-        loading: false 
-      });
-    }
-  },
+// في useProductStore - تحديث الدالة
+fetchAllProducts: async (page = 1, limit = 100) => { // 🔥 زيادة الـ limit
+  set({ loading: true });
+  try {
+    const response = await axios.get(`/products?page=${page}&limit=${limit}`);
+    const data = response.data || {};
+    
+    set({
+      products: Array.isArray(data.products) ? data.products : [],
+      currentPage: data.currentPage || 1,
+      totalPages: data.totalPages || 1,
+      totalProducts: data.totalProducts || 0,
+      loading: false,
+    });
+  } catch (error) {
+    console.error("Fetch products error:", error);
+    set({ 
+      products: [],
+      loading: false 
+    });
+  }
+},
 
   fetchFeaturedProducts: async (retryCount = 0) => {
     set({ loading: true });

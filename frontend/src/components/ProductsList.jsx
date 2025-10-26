@@ -10,7 +10,6 @@ import { useTranslation } from "react-i18next";
 import LoadingSpinner from "./LoadingSpinner";
 import dayjs from "dayjs";
 import axiosInstance from "../lib/axios";
-import axios from "axios";
 
 const iconButtonClass = "p-2 rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-emerald-500";
 
@@ -43,19 +42,19 @@ const ProductsList = () => {
   const [filterDiscount, setFilterDiscount] = useState(false);
   const [filterFeature, setFilterFeature] = useState(false);
 
-  const filteredProducts = products.filter(product => {
-    if (!product) return false;
-    
-    const matchesSearch = product.name?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false;
-    const matchesCategory = !selectedCategory || 
-      product.category?._id === selectedCategory || 
-      product.category === selectedCategory;
-    const matchesDiscount = !filterDiscount || 
-      (product.priceAfterDiscount && product.priceAfterDiscount > 0);
-    const matchesFeature = !filterFeature || product.isFeatured;
-    
-    return matchesSearch && matchesCategory && matchesDiscount && matchesFeature;
-  });
+const filteredProducts = products.filter(product => {
+  if (!product) return false;
+  
+  const matchesSearch = product.name?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false;
+  const matchesCategory = !selectedCategory || 
+    product.category?._id === selectedCategory || 
+    product.category === selectedCategory;
+  const matchesDiscount = !filterDiscount || 
+    (product.priceAfterDiscount && product.priceAfterDiscount > 0);
+  const matchesFeature = !filterFeature || product.isFeatured;
+  
+  return matchesSearch && matchesCategory && matchesDiscount && matchesFeature;
+});
 
   const highlightText = (text, highlight) => {
     if (!highlight || !text) return text;
@@ -71,22 +70,6 @@ const ProductsList = () => {
       )
     );
   };
-
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setIsLoading(true);
-        await fetchMetaData();
-        await fetchAllProducts();
-      } catch (error) {
-        console.error("❌ خطأ في جلب البيانات:", error);
-        toast.error(t("productsList.loadError"));
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    loadData();
-  }, [fetchMetaData, fetchAllProducts, t]);
 
   const getCategoryName = (category) => {
     if (!category) return t("productsList.noCategory");
@@ -122,8 +105,8 @@ const toggleSelection = (field, value) => {
         return { ...prev, [field]: [...current, value] };
       }
     } else {
-      // 🔥 للمقاسات: استخدم name إذا كان كائن، أو القيمة مباشرة إذا كانت نص
-      const sizeValue = typeof value === 'object' ? value.name : value;
+      // 🔥 إصلاح المقاسات - استخدم name إذا كان كائن
+      const sizeValue = typeof value === 'object' ? (value.name || value) : value;
       
       if (current.includes(sizeValue)) {
         return { ...prev, [field]: current.filter(v => v !== sizeValue) };
@@ -206,6 +189,30 @@ const toggleSelection = (field, value) => {
       console.error("Update error:", error);
     }
   };
+
+  // استبدال useEffect الحالي بهذا
+useEffect(() => {
+  const loadData = async () => {
+    try {
+      setIsLoading(true);
+      
+      // جلب البيانات فقط إذا لم تكن محملة مسبقاً
+      if (categories.length === 0) {
+        await fetchMetaData();
+      }
+      
+      if (products.length === 0) {
+        await fetchAllProducts(1, 100); // 🔥 زيادة الحد إلى 100
+      }
+    } catch (error) {
+      console.error("❌ خطأ في جلب البيانات:", error);
+      toast.error(t("productsList.loadError"));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  loadData();
+}, [fetchMetaData, fetchAllProducts, t]); // 🔥 إزالة dependencies غير ضرورية
 
   if (isLoading || loadingMeta) {
     return <LoadingSpinner />;
@@ -548,6 +555,7 @@ const toggleSelection = (field, value) => {
                 </div>
 
                 {/* المقاسات */}
+{/* المقاسات */}
 <div>
   <label className="block text-sm font-medium mb-2">
     {t("productEditForm.sizes")}
@@ -562,7 +570,7 @@ const toggleSelection = (field, value) => {
         sizes: [],
       }));
     }}
-    className="mb-3 px-3 py-1 rounded-md bg-[var(--color-accent)] text-white hover:[var(--color-accent-hover)]"
+    className="mb-3 px-3 py-1 rounded-md bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)]"
   >
     {showNumbers 
       ? t("productEditForm.showLetters") 
@@ -570,20 +578,26 @@ const toggleSelection = (field, value) => {
   </button>
 
   <div className="flex flex-wrap gap-2">
-    {(showNumbers ? sizesNumbers : sizesLetters).map((size) => (
-      <button
-        type="button"
-        key={size._id || size} // 🔥 أصلح المفتاح
-        onClick={() => toggleSelection("sizes", size.name || size)} // 🔥 أصلح القيمة
-        className={`px-3 py-1 rounded-md border ${
-          Array.isArray(editingProduct.sizes) && editingProduct.sizes.includes(size.name || size)
-            ? "bg-[var(--color-accent)] border-[var(--color-accent-hover)] text-white"
-            : "bg-[var(--color-bg-gray)] border-[var(--color-accent)]"
-        }`}
-      >
-        {size.name || size} {/* 🔥 أصلح العرض */}
-      </button>
-    ))}
+    {(showNumbers ? sizesNumbers : sizesLetters).map((size) => {
+      const sizeValue = size.name || size;
+      const sizeKey = size._id || sizeValue;
+      
+      return (
+        <button
+          type="button"
+          key={sizeKey}
+          onClick={() => toggleSelection("sizes", size)}
+          className={`px-3 py-1 rounded-md border ${
+            Array.isArray(editingProduct.sizes) && 
+            editingProduct.sizes.includes(sizeValue)
+              ? "bg-[var(--color-accent)] border-[var(--color-accent-hover)] text-white"
+              : "bg-[var(--color-bg-gray)] border-[var(--color-accent)]"
+          }`}
+        >
+          {sizeValue}
+        </button>
+      );
+    })}
   </div>
 </div>
 
