@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Star, InstagramIcon, Heart, MessageCircle } from "lucide-react";
+import { Star, InstagramIcon, MessageCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import StarRating from "./StarRating";
 import PeopleAlsoBought from "./PeopleAlsoBought";
@@ -13,7 +13,6 @@ const ReviewsSection = ({
 }) => {
   const { t, i18n } = useTranslation();
   const [showAllReviews, setShowAllReviews] = useState(false);
-  const [likedReviews, setLikedReviews] = useState(new Set());
 
   const isRTL = i18n.language === "ar";
 
@@ -31,16 +30,6 @@ const ReviewsSection = ({
     ? reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews 
     : 0;
 
-  const toggleLike = (reviewId) => {
-    const newLiked = new Set(likedReviews);
-    if (newLiked.has(reviewId)) {
-      newLiked.delete(reviewId);
-    } else {
-      newLiked.add(reviewId);
-    }
-    setLikedReviews(newLiked);
-  };
-
   return (
     <div className="mx-auto mt-16 max-w-7xl w-full">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -56,33 +45,35 @@ const ReviewsSection = ({
                 <Star className="w-8 h-8 text-yellow-400 fill-yellow-400" />
               </div>
               <p className="text-[var(--color-text-secondary)]">
-                {t("reviews.basedOn", { count: totalReviews })}
+                {totalReviews > 0 ? t("reviews.basedOn", { count: totalReviews }) : t("reviews.noReviewsYet")}
               </p>
             </div>
 
-            {/* توزيع التقييمات */}
-            <div className="space-y-3">
-              {[5, 4, 3, 2, 1].map((rating) => {
-                const percentage = totalReviews > 0 ? (ratingStats[rating] / totalReviews) * 100 : 0;
-                return (
-                  <div key={rating} className="flex items-center gap-3">
-                    <div className="flex items-center gap-1 w-16">
-                      <span className="text-sm text-[var(--color-text-secondary)]">{rating}</span>
-                      <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+            {/* توزيع التقييمات - يظهر فقط إذا كان هناك تقييمات */}
+            {totalReviews > 0 && (
+              <div className="space-y-3">
+                {[5, 4, 3, 2, 1].map((rating) => {
+                  const percentage = (ratingStats[rating] / totalReviews) * 100;
+                  return (
+                    <div key={rating} className="flex items-center gap-3">
+                      <div className="flex items-center gap-1 w-16">
+                        <span className="text-sm text-[var(--color-text-secondary)]">{rating}</span>
+                        <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                      </div>
+                      <div className="flex-1 bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-yellow-400 h-2 rounded-full transition-all duration-500"
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
+                      <span className="text-sm text-[var(--color-text-secondary)] w-8 text-left">
+                        {ratingStats[rating]}
+                      </span>
                     </div>
-                    <div className="flex-1 bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-yellow-400 h-2 rounded-full transition-all duration-500"
-                        style={{ width: `${percentage}%` }}
-                      />
-                    </div>
-                    <span className="text-sm text-[var(--color-text-secondary)] w-8 text-left">
-                      {ratingStats[rating]}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* إضافة تقييم جديد */}
@@ -144,7 +135,7 @@ const ReviewsSection = ({
           <div className="bg-[var(--color-bg)] rounded-2xl p-6 shadow-lg border border-[var(--color-border)]">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-[var(--color-text)]">
-                {t("reviews.title")} ({totalReviews})
+                {t("reviews.title")} {totalReviews > 0 && `(${totalReviews})`}
               </h2>
             </div>
 
@@ -212,24 +203,6 @@ const ReviewsSection = ({
                           </div>
                         </div>
                       </div>
-
-                      {/* زر الإعجاب */}
-                      <button
-                        onClick={() => toggleLike(rev._id)}
-                        className={`flex items-center gap-1 px-3 py-1 rounded-full border transition-all ${
-                          likedReviews.has(rev._id)
-                            ? 'bg-red-50 border-red-200 text-red-500'
-                            : 'bg-gray-50 border-gray-200 text-gray-500'
-                        }`}
-                      >
-                        <Heart 
-                          size={16} 
-                          className={likedReviews.has(rev._id) ? 'fill-red-500' : ''} 
-                        />
-                        <span className="text-sm">
-                          {likedReviews.has(rev._id) ? t("reviews.liked") : t("reviews.like")}
-                        </span>
-                      </button>
                     </div>
 
                     {/* نص التقييم */}
