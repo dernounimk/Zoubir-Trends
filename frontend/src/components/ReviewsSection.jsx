@@ -33,63 +33,8 @@ const ReviewsSection = ({
   return (
     <div className="mx-auto mt-16 max-w-7xl w-full">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* العمود الأيسر: إحصائيات التقييمات */}
-        <div className="lg:col-span-1">
-          {/* إضافة تقييم جديد */}
-          {product.reviewsEnabled && (
-            <div className="mt-6 bg-[var(--color-bg)] rounded-2xl p-6 shadow-lg border border-[var(--color-border)]">
-              <h3 className="text-lg font-semibold mb-4 text-[var(--color-text)]">
-                {t("reviews.addReview")}
-              </h3>
-              
-              <div className="mb-4">
-                <StarRating
-                  rating={reviewForm.rating}
-                  setRating={(val) => setReviewForm({ ...reviewForm, rating: val })}
-                  size="lg"
-                />
-              </div>
 
-              <div className="space-y-4">
-                <input
-                  type="text"
-                  placeholder={t("reviews.name")}
-                  value={reviewForm.name}
-                  onChange={(e) => setReviewForm({ ...reviewForm, name: e.target.value })}
-                  className="w-full rounded-xl p-3 bg-[var(--color-bg-gray)] border border-[var(--color-border)] focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)] transition-all"
-                />
-
-                <div className="relative">
-                  <InstagramIcon className="absolute top-3 left-3 w-5 h-5 text-pink-500" />
-                  <input
-                    type="text"
-                    placeholder={t("reviews.instagram")}
-                    value={reviewForm.instagram}
-                    onChange={(e) => setReviewForm({ ...reviewForm, instagram: e.target.value.trim() })}
-                    className="w-full rounded-xl p-3 pl-10 bg-[var(--color-bg-gray)] border border-[var(--color-border)] focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)] transition-all"
-                  />
-                </div>
-
-                <textarea
-                  placeholder={t("reviews.comment")}
-                  value={reviewForm.comment}
-                  onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
-                  rows="3"
-                  className="w-full rounded-xl p-3 bg-[var(--color-bg-gray)] border border-[var(--color-border)] focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)] transition-all resize-none"
-                />
-
-                <button
-                  onClick={handleSubmitReview}
-                  className="w-full bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-hover)] text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300"
-                >
-                  {t("reviews.submit")}
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* العمود الأيمن: قائمة التقييمات */}
+        {/* ملخص التقييمات ونموذج الإضافة */}
         <div className="lg:col-span-2">
           <div className="bg-[var(--color-bg)] rounded-2xl p-6 shadow-lg border border-[var(--color-border)]">
             <div className="flex items-center justify-between mb-6">
@@ -200,6 +145,60 @@ const ReviewsSection = ({
               </div>
             )}
           </div>
+        </div>
+                <div className="lg:col-span-1">
+          {/* إضافة تقييم جديد */}
+          {product.reviewsEnabled && (
+            <div className="mt-6 bg-[var(--color-bg)] rounded-2xl p-6 shadow-lg border border-[var(--color-border)]">
+              <h3 className="text-lg font-semibold mb-4 text-[var(--color-text)]">
+                {t("reviews.addReview")}
+              </h3>
+              
+              <div className="mb-4">
+                <StarRating
+                  rating={reviewForm.rating}
+                  setRating={(val) => setReviewForm({ ...reviewForm, rating: val })}
+                  size="lg"
+                />
+              </div>
+
+              <div className="space-y-4">
+                <input
+                  type="text"
+                  placeholder={t("reviews.name")}
+                  value={reviewForm.name}
+                  onChange={(e) => setReviewForm({ ...reviewForm, name: e.target.value })}
+                  className="w-full rounded-xl p-3 bg-[var(--color-bg-gray)] border border-[var(--color-border)] focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)] transition-all"
+                />
+
+                <div className="relative">
+                  <InstagramIcon className="absolute top-3 left-3 w-5 h-5 text-pink-500" />
+                  <input
+                    type="text"
+                    placeholder={t("reviews.instagram")}
+                    value={reviewForm.instagram}
+                    onChange={(e) => setReviewForm({ ...reviewForm, instagram: e.target.value.trim() })}
+                    className="w-full rounded-xl p-3 pl-10 bg-[var(--color-bg-gray)] border border-[var(--color-border)] focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)] transition-all"
+                  />
+                </div>
+
+                <textarea
+                  placeholder={t("reviews.comment")}
+                  value={reviewForm.comment}
+                  onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
+                  rows="3"
+                  className="w-full rounded-xl p-3 bg-[var(--color-bg-gray)] border border-[var(--color-border)] focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)] transition-all resize-none"
+                />
+
+                <button
+                  onClick={handleSubmitReview}
+                  className="w-full bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-hover)] text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300"
+                >
+                  {t("reviews.submit")}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
