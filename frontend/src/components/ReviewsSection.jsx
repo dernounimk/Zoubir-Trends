@@ -35,47 +35,6 @@ const ReviewsSection = ({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* العمود الأيسر: إحصائيات التقييمات */}
         <div className="lg:col-span-1">
-          <div className="bg-gradient-to-br from-[var(--color-bg)] to-[var(--color-bg-gray)] rounded-2xl p-6 shadow-lg border border-[var(--color-border)]">
-            {/* التقييم العام */}
-            <div className="text-center mb-6">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <span className="text-4xl font-bold text-[var(--color-text)]">
-                  {averageRating.toFixed(1)}
-                </span>
-                <Star className="w-8 h-8 text-yellow-400 fill-yellow-400" />
-              </div>
-              <p className="text-[var(--color-text-secondary)]">
-                {totalReviews > 0 ? t("reviews.basedOn", { count: totalReviews }) : t("reviews.noReviewsYet")}
-              </p>
-            </div>
-
-            {/* توزيع التقييمات - يظهر فقط إذا كان هناك تقييمات */}
-            {totalReviews > 0 && (
-              <div className="space-y-3">
-                {[5, 4, 3, 2, 1].map((rating) => {
-                  const percentage = (ratingStats[rating] / totalReviews) * 100;
-                  return (
-                    <div key={rating} className="flex items-center gap-3">
-                      <div className="flex items-center gap-1 w-16">
-                        <span className="text-sm text-[var(--color-text-secondary)]">{rating}</span>
-                        <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                      </div>
-                      <div className="flex-1 bg-gray-200 rounded-full h-2">
-                        <div 
-                          className="bg-yellow-400 h-2 rounded-full transition-all duration-500"
-                          style={{ width: `${percentage}%` }}
-                        />
-                      </div>
-                      <span className="text-sm text-[var(--color-text-secondary)] w-8 text-left">
-                        {ratingStats[rating]}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
           {/* إضافة تقييم جديد */}
           {product.reviewsEnabled && (
             <div className="mt-6 bg-[var(--color-bg)] rounded-2xl p-6 shadow-lg border border-[var(--color-border)]">
