@@ -66,8 +66,15 @@
     "logout": "تسجيل الخروج"
   },
   "reviews": {
+    "title": "تقييمات العملاء",
+    "basedOn": "بناءً على {{count}} تقييم",
+    "addReview": "أضف تقييمك",
+    "verified": "مشتري موثوق",
+    "recommended": "ينصح به",
+    "like": "أعجبني",
+    "liked": "معجب به",
+    "showLess": "عرض أقل",
     "number": "عدد التقييمات",
-    "title": "التقييمات",
     "name": "اسمك",
     "instagram": "حسابك على إنستغرام",
     "comment": "تعليقك",
